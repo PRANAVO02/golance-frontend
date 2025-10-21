@@ -1,0 +1,54 @@
+/* =======================
+   Main Container with Theme-Aware Floating Blobs
+   ======================= */
+.main-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--bg-color), var(--card-bg));
+  padding: 50px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.5s;
+}
+
+/* Top-left blob */
+.main-container::before {
+  content: '';
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(255,110,199,0.3), rgba(255,135,171,0.3));
+  border-radius: 50%;
+  top: -80px;
+  left: -80px;
+  animation: floatBlob1 12s ease-in-out infinite alternate;
+  z-index: 0;
+  pointer-events: none; /* allow clicks on elements above */
+}
+
+/* Bottom-right blob */
+.main-container::after {
+  content: '';
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(58,134,255,0.25), rgba(0,184,148,0.25));
+  border-radius: 50%;
+  bottom: -120px;
+  right: -120px;
+  animation: floatBlob2 15s ease-in-out infinite alternate;
+  z-index: 0;
+  pointer-events: none; /* allow clicks on elements above */
+}
+
+/* Floating animations */
+@keyframes floatBlob1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, -20px) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes floatBlob2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-40px, 30px) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
+}

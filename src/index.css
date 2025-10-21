@@ -1,0 +1,396 @@
+/* 🌞 Light Theme */
+:root {
+  --bg-color: #f4f2ff; /* Lavender mist */
+  --card-bg: #ffffff;
+  --primary-btn-bg: #9b5de5; /* Purple gradient-ish */
+  --primary-btn-text: #ffffff;
+  --text-color: #3a2d4f; /* Deep purple-gray */
+  --link-color: #ff5d8f; /* Sakura pink */
+  --link-hover: #ff87ab;
+  --input-bg: #ffffff;
+  --input-text: #3a2d4f;
+  --input-border: #dbc9ff;
+}
+
+/* 🌙 Dark Theme */
+[data-theme="dark"] {
+  --bg-color: #111827; /* Dark slate */
+  --card-bg: #1f2937; /* Slightly lighter slate card */
+
+  --primary-btn-bg: #3b82f6; /* Blue button */
+  --primary-btn-text: #ffffff;
+
+  --text-color: #e5e7eb; /* Light gray text */
+
+  --link-color: #60a5fa;
+  --link-hover: #ff7849;
+
+  --input-bg: #1f2937;
+  --input-text: #e5e7eb;
+  --input-border: #374151;
+}
+
+/* General body */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s, color 0.3s;
+}
+html {
+  scroll-behavior: smooth;
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+}
+
+.navbar .nav-link {
+  color: var(--text-color) !important;
+  transition: color 0.2s;
+}
+.navbar .nav-link:hover {
+  color: var(--link-hover) !important;
+}
+
+/* Buttons */
+button,
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.6em 1.2em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.btn-primary {
+  background-color: var(--primary-btn-bg);
+  color: var(--primary-btn-text);
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+/* Custom theme toggle button */
+.theme-toggle {
+  background: var(--card-bg);
+  border: none;
+  border-radius: 20px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background 0.3s, color 0.3s;
+}
+.theme-toggle:hover {
+  background: var(--primary-btn-bg);
+  color: var(--primary-btn-text);
+}
+
+/* Cards */
+.card {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Inputs */
+input,
+textarea,
+select {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  padding: 0.5em;
+  width: 100%;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-border);
+}
+/* ===== Inputs (Bootstrap form-control) ===== */
+.form-control,
+.form-select {
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border: 1px solid var(--input-border) !important;
+}
+
+.form-control::placeholder {
+  color: var(--input-border) !important;
+}
+
+/* ===== Tables ===== */
+.table {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-color: var(--input-border);
+}
+
+.table th {
+  background-color: var(--primary-btn-bg);
+  color: var(--primary-btn-text);
+}
+
+.table td {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+}
+
+/* Zebra striping */
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.05); /* Light mode fallback */
+}
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.05); /* Dark mode */
+}
+
+/* ===== Tabs ===== */
+.nav-tabs .nav-link {
+  color: var(--link-color);
+  background-color: transparent;
+  border: 1px solid var(--input-border);
+}
+
+.nav-tabs .nav-link.active {
+  background-color: var(--primary-btn-bg);
+  color: var(--primary-btn-text);
+  border-color: var(--primary-btn-bg) var(--primary-btn-bg) transparent;
+}
+
+.nav-tabs {
+  border-bottom: 1px solid var(--input-border);
+}
+/* ===== Modals ===== */
+.modal-content {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+}
+
+.modal-header,
+.modal-footer {
+  background-color: var(--bg-color) !important;
+  border-color: var(--input-border) !important;
+}
+
+/* ===== Alerts (inline messages) ===== */
+.alert {
+  border-radius: 8px;
+  border: 1px solid var(--input-border);
+  padding: 1em;
+  margin: 1em 0;
+  font-weight: 500;
+}
+
+.alert-success {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  color: #28a745 !important;
+}
+[data-theme="dark"] .alert-success {
+  background-color: rgba(60, 179, 113, 0.1) !important;
+  color: #3cb371 !important;
+}
+
+.alert-danger {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #dc3545 !important;
+}
+[data-theme="dark"] .alert-danger {
+  background-color: rgba(255, 76, 97, 0.1) !important;
+  color: #ff4c61 !important;
+}
+
+.alert-info {
+  background-color: rgba(23, 162, 184, 0.1) !important;
+  color: #17a2b8 !important;
+}
+[data-theme="dark"] .alert-info {
+  background-color: rgba(100, 200, 220, 0.1) !important;
+  color: #00c8ff !important;
+}
+
+/* ===== Dropdowns ===== */
+.dropdown-menu {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--input-border) !important;
+}
+
+.dropdown-item {
+  color: var(--text-color) !important;
+}
+
+.dropdown-item:hover {
+  background-color: var(--primary-btn-bg) !important;
+  color: var(--primary-btn-text) !important;
+}
+/* ===== Ensure text color adapts to theme ===== */
+body,
+p,
+span,
+label,
+.form-label,
+.modal-title,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.table,
+.table td,
+.table th,
+.navbar,
+.dropdown-item,
+.card,
+.alert,
+.list-group-item {
+  color: var(--text-color) !important;
+}
+
+/* Fix placeholder visibility */
+input::placeholder,
+textarea::placeholder,
+.form-control::placeholder {
+  color: var(--input-border) !important;
+}
+
+.delete-dsp {
+  color: var(--text-color); /* Adapts to light/dark theme */
+}
+.feature-desc {
+  color: var(--text-color); /* Adapts to light/dark theme */
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin-bottom: 0;
+}
+.dev-msg {
+  color: var(--text-color); /* Adapts to light/dark theme */
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin-bottom: 0;
+}
+/* Info Card Overrides */
+.info-card {
+  background-color: var(--card-bg) !important; /* override bg-white */
+  border-radius: 1.5rem !important; /* override rounded-4 if needed */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important; /* override shadow-sm */
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
+
+.info-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+}
+
+.info-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-color) !important; /* override Bootstrap text color */
+}
+
+.info-desc {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-color) !important; /* override text-muted */
+  margin-bottom: 1rem;
+}
+
+footer,
+footer p,
+footer span,
+footer li,
+footer a {
+  color: var(--text-color) !important;
+}
+
+/* Footer links hover */
+footer a:hover {
+  color: var(--link-hover) !important;
+}
+
+/* Accordion headers (questions) */
+.accordion-button {
+  color: var(--text-color) !important;
+  background-color: var(--card-bg) !important;
+}
+
+/* Accordion collapse background */
+.accordion-collapse {
+  background-color: var(--card-bg) !important;
+}
+/* Footer links hover */
+footer a:hover {
+  color: var(--link-hover) !important;
+}
+/* Footer theme colors */
+.footer-text,
+.footer-link {
+  color: var(--text-color) !important;
+  transition: color 0.3s;
+}
+
+.footer-link:hover {
+  color: var(--link-hover) !important;
+}
+/* ================= Info Cards Hover ================= */
+.info-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.info-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* ================= Feature Cards Hover ================= */
+.card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+/* ================= Developer Cards Hover ================= */
+.dev-msg {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.col-sm-6.col-md-4.col-lg-2:hover .dev-msg,
+.col-sm-6.col-md-4.col-lg-2:hover img {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.col-sm-6.col-md-4.col-lg-2 img {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* For strong/emphasized text */
+strong,
+b {
+  color: var(--text-color) !important;
+}
+/* Light theme toggler (dark lines) */
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(25,24,59,0.8)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+/* Dark theme toggler (white lines) */
+[data-theme="dark"] .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(255,255,255,0.9)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
