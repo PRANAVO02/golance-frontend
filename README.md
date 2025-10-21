@@ -1,21 +1,14 @@
-for frontend
-go to file directory run > npm run dev
+<h1>Golance 💡</h1>
+<h2><i>Frontend 😎</i></h2>
+
+Go to the file directory 
+run ><b> npm run dev</b>
 
 open localhost:5173
 
-For Backend
-clean maven run mian file as java application in eclipse
 
-in intelij just run the file
-
-opens localhost:8080
-
-21/10
-issue to complete:
-stille the assigned username display issue pending in task posted by me page
-
-and after task completion there is error sending the amount saying id cannot be null
-
-yet to done
+yet to Complete
 
 file upload and file review
+task review 
+user review
