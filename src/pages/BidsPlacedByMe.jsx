@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Modal, Form } from "react-bootstrap";
+import { ENDPOINTS } from "../api/endpoints";
 
 export default function BidsPlacedByMe({ bids, setBids, headers, fetchBids }) {
   const [deleteBidId, setDeleteBidId] = useState(null);
@@ -13,7 +14,8 @@ export default function BidsPlacedByMe({ bids, setBids, headers, fetchBids }) {
 
   const confirmDeleteBid = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/api/bids/${deleteBidId}`, {
+      // const res = await fetch(`http://localhost:8080/api/bids/${deleteBidId}`, {
+        const res = await fetch(ENDPOINTS.DELETE_BID(deleteBidId), {
         method: "DELETE",
         headers,
       });

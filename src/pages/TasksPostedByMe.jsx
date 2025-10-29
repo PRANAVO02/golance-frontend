@@ -1,24 +1,33 @@
 import { useState } from "react";
 import { Button, Modal, Form } from "react-bootstrap";
+import { ENDPOINTS } from "../api/endpoints";
 
-export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }) {
+export default function TasksPostedByMe({
+  tasks,
+  setTasks,
+  headers,
+  fetchTasks,
+}) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTask, setEditTask] = useState(null);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTaskId, setDeleteTaskId] = useState(null);
+
   const [selectedTaskBids, setSelectedTaskBids] = useState([]);
   const [showBidsModal, setShowBidsModal] = useState(false);
+
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewTask, setReviewTask] = useState(null);
 
-  // ---------- Wallet Transfer ----------
   const [showCreditTransferModal, setShowCreditTransferModal] = useState(false);
   const [transferAmount, setTransferAmount] = useState(0);
   const [transferToUserId, setTransferToUserId] = useState(null);
 
+  const token = localStorage.getItem("token");
   const userId = JSON.parse(localStorage.getItem("user"))?.id;
 
-  // ---------- Edit Task ----------
+  // -------- Edit Task --------
   const handleEditClick = (task) => {
     setEditTask({ ...task });
     setShowEditModal(true);
@@ -29,7 +38,7 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
 
   const saveEdit = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/api/tasks/${editTask.id}`, {
+      const res = await fetch(`${ENDPOINTS.TASKS}/${editTask.id}`, {
         method: "PUT",
         headers,
         body: JSON.stringify(editTask),
@@ -45,7 +54,76 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
     }
   };
 
-  // ---------- Delete Task ----------
+  // -------- Download File Uploaded By Poster --------
+  const handleDownload = async (task) => {
+    if (!task.filePath) {
+      alert("No file uploaded by task poster");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${ENDPOINTS.TASK_DOWNLOAD(task.id)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error("Failed to download file");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const originalFileName = task.filePath.split("_").slice(1).join("_");
+      const safeTitle = task.title.replace(/\s+/g, "_");
+      const finalFileName = `${safeTitle}_${originalFileName}`;
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = finalFileName;
+      link.click();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("❌ Could not download task file");
+    }
+  };
+
+  // -------- Download File Uploaded By Freelancer --------
+  const handleFreelancerDownload = async (task) => {
+    if (!task.freelancerFilePath) {
+      alert("No file uploaded by freelancer");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${ENDPOINTS.TASKS}/download/freelancer/${task.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to download file");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const originalFileName = task.freelancerFilePath.split("_").slice(1).join("_");
+      const safeTitle = task.title.replace(/\s+/g, "_");
+      const finalFileName = `${safeTitle}_${originalFileName}`;
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = finalFileName;
+      link.click();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert("❌ Could not download freelancer file");
+    }
+  };
+
+  // -------- Delete Task --------
   const handleDeleteClick = (taskId) => {
     setDeleteTaskId(taskId);
     setShowDeleteModal(true);
@@ -53,7 +131,7 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
 
   const confirmDelete = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/api/tasks/${deleteTaskId}`, {
+      const res = await fetch(`${ENDPOINTS.TASKS}/${deleteTaskId}`, {
         method: "DELETE",
         headers,
       });
@@ -68,12 +146,10 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
     }
   };
 
-  // ---------- View Bids ----------
+  // -------- View Bids --------
   const handleViewBids = async (taskId) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/bids/tasks/${taskId}`, {
-        headers,
-      });
+      const res = await fetch(ENDPOINTS.BIDS_BY_TASK(taskId), { headers });
       const data = await res.json();
       setSelectedTaskBids(data.map((b) => ({ ...b, taskId })));
       setShowBidsModal(true);
@@ -83,22 +159,20 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
     }
   };
 
-  // ---------- Allocate Bid ----------
+  // -------- Allocate Bid --------
   const handleSelectBid = async (bid) => {
     try {
-      const res = await fetch(
-        `http://localhost:8080/api/bids/tasks/${bid.taskId}/allocate/${bid.id}`,
-        { method: "POST", headers }
-      );
+      const res = await fetch(ENDPOINTS.TASK_ALLOCATE(bid.taskId, bid.id), {
+        method: "POST",
+        headers,
+      });
 
       if (res.ok) {
         const updatedTask = await res.json();
         alert(`Bid allocated to ${bid.bidderName} successfully!`);
-
         setTasks((prevTasks) =>
           prevTasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
         );
-
         setShowBidsModal(false);
         fetchTasks();
       } else {
@@ -111,16 +185,16 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
     }
   };
 
-  // ---------- Review Work ----------
+  // -------- Review Work --------
   const handleReviewClick = (task) => {
     setReviewTask(task);
     setShowReviewModal(true);
   };
 
-  // ---------- Update Status ----------
+  // -------- Update Status --------
   const updateStatus = async (taskId, newStatus) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/tasks/${taskId}/status`, {
+      const res = await fetch(`${ENDPOINTS.TASKS}/${taskId}/status`, {
         method: "PUT",
         headers,
         body: JSON.stringify({ status: newStatus }),
@@ -129,14 +203,12 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
         alert(`Status updated to ${newStatus}!`);
         setShowReviewModal(false);
 
-        // Open credit transfer modal if task accepted
         if (newStatus === "COMPLETED") {
           const task = tasks.find((t) => t.id === taskId);
           setTransferAmount(task.creditsOffered);
           setTransferToUserId(task.assignedUserId);
           setShowCreditTransferModal(true);
         }
-
         fetchTasks();
       }
     } catch (err) {
@@ -145,10 +217,10 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
     }
   };
 
-  // ---------- Wallet Transfer Handler ----------
+  // -------- Wallet Transfer --------
   const handleCreditTransfer = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/wallet/transfer", {
+      const res = await fetch(ENDPOINTS.WALLET_TRANSFER, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -160,8 +232,6 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
       if (res.ok) {
         alert("Credits sent successfully!");
         setShowCreditTransferModal(false);
-        setTransferAmount(0);
-        setTransferToUserId(null);
       } else {
         const err = await res.json();
         alert("Transfer failed: " + (err.message || "Unknown error"));
@@ -185,6 +255,7 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
               <th>Credits</th>
               <th>Deadline</th>
               <th>Status</th>
+              <th>File</th>
               <th>View Bids / Assigned</th>
               <th>Review Work</th>
               <th>Delete Task</th>
@@ -200,22 +271,55 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
                 <td>{task.deadline}</td>
                 <td>{task.status}</td>
 
-                {/* ---------- View Bids / Assigned ---------- */}
+                {/* ---------- File Column (task poster) ---------- */}
                 <td>
-                  {task.status === "ALLOCATED" ? (
-                    <span>Assigned to: {task.assignedUserName || "—"}</span>
-                  ) : (
-                    <Button variant="info" size="sm" onClick={() => handleViewBids(task.id)}>
-                      View Bids
+                  {task.filePath ? (
+                    <Button
+                      variant="outline-success"
+                      size="sm"
+                      onClick={() => handleDownload(task)}
+                    >
+                      ⬇️ Download
                     </Button>
+                  ) : (
+                    <span className="text-muted">No File</span>
                   )}
                 </td>
 
-                {/* ---------- Review Work ---------- */}
+                {/* ---------- View Bids / Assigned ---------- */}
+                <td>
+                  {task.status === "OPEN" ? (
+                    <Button
+                      variant="info"
+                      size="sm"
+                      onClick={() => handleViewBids(task.id)}
+                    >
+                      View Bids
+                    </Button>
+                  ) : task.assignedUserName ? (
+                    <span>Assigned to: {task.assignedUserName}</span>
+                  ) : (
+                    <span>—</span>
+                  )}
+                </td>
+
+                {/* ---------- Review Work Column (freelancer file) ---------- */}
                 <td>
                   {task.status === "PENDING" ? (
-                    <Button variant="primary" size="sm" onClick={() => handleReviewClick(task)}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleReviewClick(task)}
+                    >
                       Review Work
+                    </Button>
+                  ) : task.status === "COMPLETED" && task.freelancerFilePath ? (
+                    <Button
+                      variant="success"
+                      size="sm"
+                      onClick={() => handleFreelancerDownload(task)}
+                    >
+                      ⬇️ Download File
                     </Button>
                   ) : (
                     <span>—</span>
@@ -225,11 +329,17 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
                 {/* ---------- Delete Task ---------- */}
                 <td>
                   {task.status === "OPEN" ? (
-                    <Button variant="danger" size="sm" onClick={() => handleDeleteClick(task.id)}>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDeleteClick(task.id)}
+                    >
                       Delete
                     </Button>
                   ) : (
-                    <span className="delete_dsp">Assigned task cannot be deleted</span>
+                    <span className="delete_dsp">
+                      Assigned task cannot be deleted
+                    </span>
                   )}
                 </td>
               </tr>
@@ -239,7 +349,11 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
       </div>
 
       {/* ----------------- Review Work Modal ----------------- */}
-      <Modal show={showReviewModal} onHide={() => setShowReviewModal(false)} centered>
+      <Modal
+        show={showReviewModal}
+        onHide={() => setShowReviewModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Review Work</Modal.Title>
         </Modal.Header>
@@ -247,22 +361,50 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
           {reviewTask && (
             <>
               <h5>{reviewTask.title}</h5>
-              <div style={{ minHeight: "100px", border: "1px solid #ccc", marginTop: "20px" }}></div>
+              <div
+                style={{
+                  minHeight: "100px",
+                  border: "1px solid #ccc",
+                  marginTop: "20px",
+                }}
+              ></div>
+              {/* ✅ Use freelancerFilePath here */}
+              {reviewTask.freelancerFilePath ? (
+                <Button
+                  variant="outline-success"
+                  size="sm"
+                  onClick={() => handleFreelancerDownload(reviewTask)}
+                >
+                  ⬇️ Download Freelancer File
+                </Button>
+              ) : (
+                <span className="text-muted">No file uploaded by freelancer</span>
+              )}
             </>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="success" onClick={() => updateStatus(reviewTask.id, "COMPLETED")}>
+          <Button
+            variant="success"
+            onClick={() => updateStatus(reviewTask.id, "COMPLETED")}
+          >
             Accept
           </Button>
-          <Button variant="warning" onClick={() => updateStatus(reviewTask.id, "IN_PROGRESS")}>
+          <Button
+            variant="warning"
+            onClick={() => updateStatus(reviewTask.id, "IN_PROGRESS")}
+          >
             Request Revision
           </Button>
         </Modal.Footer>
       </Modal>
 
       {/* ----------------- Credit Transfer Modal ----------------- */}
-      <Modal show={showCreditTransferModal} onHide={() => setShowCreditTransferModal(false)} centered>
+      <Modal
+        show={showCreditTransferModal}
+        onHide={() => setShowCreditTransferModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Transfer Credits</Modal.Title>
         </Modal.Header>
@@ -270,13 +412,17 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
           <p>
             You are about to send <strong>{transferAmount} credits</strong> to{" "}
             <strong>
-              {tasks.find((t) => t.assignedUserId === transferToUserId)?.assignedUserName || "User"}
+              {tasks.find((t) => t.assignedUserId === transferToUserId)
+                ?.assignedUserName || "User"}
             </strong>
             .
           </p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCreditTransferModal(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowCreditTransferModal(false)}
+          >
             Cancel
           </Button>
           <Button variant="success" onClick={handleCreditTransfer}>
@@ -285,51 +431,12 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
         </Modal.Footer>
       </Modal>
 
-      {/* ----------------- Edit Task Modal ----------------- */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Task</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            {["title", "description", "category", "creditsOffered", "deadline", "status"].map(
-              (field) => (
-                <Form.Group key={field} className="mb-3">
-                  <Form.Label>{field}</Form.Label>
-                  {field === "status" ? (
-                    <Form.Select name="status" value={editTask?.status} onChange={handleEditChange}>
-                      <option value="PENDING">PENDING</option>
-                      <option value="OPEN">OPEN</option>
-                      <option value="ALLOCATED">ALLOCATED</option>
-                      <option value="IN_PROGRESS">IN_PROGRESS</option>
-                      <option value="COMPLETED">COMPLETED</option>
-                      <option value="CANCELLED">CANCELLED</option>
-                    </Form.Select>
-                  ) : (
-                    <Form.Control
-                      type={field === "creditsOffered" ? "number" : field === "deadline" ? "date" : "text"}
-                      name={field}
-                      value={editTask?.[field] || ""}
-                      onChange={handleEditChange}
-                    />
-                  )}
-                </Form.Group>
-              )
-            )}
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="success" onClick={saveEdit}>
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
       {/* ----------------- Delete Task Modal ----------------- */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+      <Modal
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Confirm Delete</Modal.Title>
         </Modal.Header>
@@ -345,7 +452,12 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
       </Modal>
 
       {/* ----------------- Bids Modal ----------------- */}
-      <Modal show={showBidsModal} onHide={() => setShowBidsModal(false)} size="lg" centered>
+      <Modal
+        show={showBidsModal}
+        onHide={() => setShowBidsModal(false)}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Bids for Task</Modal.Title>
         </Modal.Header>
@@ -369,13 +481,19 @@ export default function TasksPostedByMe({ tasks, setTasks, headers, fetchTasks }
                     <td>{bid.description}</td>
                     <td>{bid.estimatedDays}</td>
                     <td>
-                      {tasks.find((t) => t.id === bid.taskId)?.status === "ALLOCATED" ? (
+                      {tasks.find((t) => t.id === bid.taskId)?.status ===
+                      "ALLOCATED" ? (
                         <span>
                           Assigned to:{" "}
-                          {tasks.find((t) => t.id === bid.taskId)?.assignedUserName || "—"}
+                          {tasks.find((t) => t.id === bid.taskId)
+                            ?.assignedUserName || "—"}
                         </span>
                       ) : (
-                        <Button variant="success" size="sm" onClick={() => handleSelectBid(bid)}>
+                        <Button
+                          variant="success"
+                          size="sm"
+                          onClick={() => handleSelectBid(bid)}
+                        >
                           Select
                         </Button>
                       )}

@@ -3,6 +3,7 @@ import { Tab, Nav, Row, Col } from "react-bootstrap";
 import TasksPostedByMe from "./TasksPostedByMe";
 import BidsPlacedByMe from "./BidsPlacedByMe";
 import AssignedTasks from "./AssignedTasks";
+import { ENDPOINTS } from "../api/endpoints";
 
 export default function MyTasks() {
   const [tasks, setTasks] = useState([]);
@@ -21,7 +22,8 @@ export default function MyTasks() {
   const fetchTasks = async () => {
     if (!user || !token) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/tasks/user/${user.id}`, { headers });
+      // const res = await fetch(`http://localhost:8080/api/tasks/user/${user.id}`, { headers });
+        const res = await fetch(ENDPOINTS.TASKS_BY_USER(user.id), { headers });
       setTasks(await res.json());
     } catch (err) {
       console.error(err);
@@ -30,7 +32,8 @@ export default function MyTasks() {
 
   const fetchBids = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/api/bids/user/${user.id}`, { headers });
+      // const res = await fetch(`http://localhost:8080/api/bids/user/${user.id}`, { headers });
+       const res = await fetch(ENDPOINTS.BIDS_BY_USER(user.id), { headers });
       setBids(await res.json());
     } catch (err) {
       console.error(err);
@@ -39,7 +42,8 @@ export default function MyTasks() {
 
   const fetchAssignedTasks = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/api/tasks/user/${user.id}/assigned-tasks`, { headers });
+      // const res = await fetch(`http://localhost:8080/api/tasks/user/${user.id}/assigned-tasks`, { headers });
+       const res = await fetch(ENDPOINTS.ASSIGNED_TASKS(user.id), { headers });
       setAssignedTasks(await res.json());
     } catch (err) {
       console.error(err);

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { ENDPOINTS } from "../api/endpoints"; // ✅ Import endpoints
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -17,7 +18,8 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
+      // const res = await fetch("http://localhost:8080/api/auth/login", {
+         const res = await fetch(ENDPOINTS.LOGIN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

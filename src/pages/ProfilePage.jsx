@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { ENDPOINTS } from "../api/endpoints";
 
 export default function ProfilePage() {
   const { id } = useParams(); // get user ID from URL
@@ -24,13 +25,15 @@ export default function ProfilePage() {
 
       try {
         // Fetch user details
-        const resUser = await fetch(`http://localhost:8080/api/users/${id}`, { headers });
+        // const resUser = await fetch(`http://localhost:8080/api/users/${id}`, { headers });
+        const resUser = await fetch(ENDPOINTS.USERS(id), { headers });
         if (!resUser.ok) throw new Error("Failed to fetch user details");
         const userData = await resUser.json();
         setUser(userData);
 
         // Fetch wallet balance
-        const resBalance = await fetch(`http://localhost:8080/api/wallet/balance/${id}`, { headers });
+        // const resBalance = await fetch(`http://localhost:8080/api/wallet/balance/${id}`, { headers });
+        const resBalance = await fetch(ENDPOINTS.WALLET_BALANCE(id), { headers });
         if (!resBalance.ok) throw new Error("Failed to fetch wallet balance");
         const balanceData = await resBalance.json(); // balance is returned as a number
         setBalance(balanceData);

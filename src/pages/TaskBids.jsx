@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button, Table } from "react-bootstrap";
+import { ENDPOINTS } from "../api/endpoints";
 
 export default function TaskBids() {
   const { taskId } = useParams();
@@ -28,13 +29,15 @@ export default function TaskBids() {
 
       try {
         // Fetch task details
-        const taskRes = await fetch(`http://localhost:8080/api/tasks/${taskId}`, { headers });
+        // const taskRes = await fetch(`http://localhost:8080/api/tasks/${taskId}`, { headers });
+         const taskRes = await fetch(ENDPOINTS.TASKS + `/${taskId}`, { headers });
         if (!taskRes.ok) throw new Error("Failed to fetch task details");
         const taskData = await taskRes.json();
         setTask(taskData);
 
         // Fetch bids
-        const bidRes = await fetch(`http://localhost:8080/api/bids/tasks/${taskId}`, { headers });
+        // const bidRes = await fetch(`http://localhost:8080/api/bids/tasks/${taskId}`, { headers });
+        const bidRes = await fetch(ENDPOINTS.BIDS_BY_TASK(taskId), { headers });
         if (!bidRes.ok) throw new Error("Failed to fetch bids");
         const bidData = await bidRes.json();
         setBids(bidData);
@@ -53,7 +56,8 @@ export default function TaskBids() {
 
     try {
       // Update task status to ALLOCATED and assign bidder
-      const res = await fetch(`http://localhost:8080/api/tasks/${taskId}/allocate/${bidId}`, {
+      // const res = await fetch(`http://localhost:8080/api/tasks/${taskId}/allocate/${bidId}`, {
+        const res = await fetch(`${ENDPOINTS.TASKS}/${taskId}/allocate/${bidId}`, {
         method: "PUT",
         headers,
       });

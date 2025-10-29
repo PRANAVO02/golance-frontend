@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { ENDPOINTS } from "../api/endpoints"; // ✅ imported
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -46,8 +47,9 @@ export default function RegisterPage() {
     }
 
     try {
-      const registerRes = await fetch(
-        "http://localhost:8080/api/users/register",
+      // const registerRes = await fetch(
+      //   "http://localhost:8080/api/users/register",
+         const registerRes = await fetch(ENDPOINTS.REGISTER,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

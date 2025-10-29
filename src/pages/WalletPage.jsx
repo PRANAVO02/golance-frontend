@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ENDPOINTS } from "../api/endpoints";
 
 export default function WalletPage() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -7,7 +8,7 @@ export default function WalletPage() {
 
   const headers = {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
   };
 
   const [balance, setBalance] = useState(null);
@@ -21,18 +22,16 @@ export default function WalletPage() {
   // Fetch balance and transactions
   const fetchWalletData = async () => {
     try {
-      const balanceRes = await fetch(
-        `http://localhost:8080/api/wallet/balance/${userId}`,
-        { headers }
-      );
+      // const balanceRes = await fetch( `http://localhost:8080/api/wallet/balance/${userId}`, { headers });
+      const balanceRes = await fetch(ENDPOINTS.WALLET_BALANCE(userId), {
+        headers,
+      });
       if (!balanceRes.ok) throw new Error("Failed to fetch balance");
       const balanceData = await balanceRes.json();
       setBalance(balanceData);
 
-      const txRes = await fetch(
-        `http://localhost:8080/api/transactions/${userId}`,
-        { headers }
-      );
+      // const txRes = await fetch(`http://localhost:8080/api/transactions/${userId}`,{ headers });
+      const txRes = await fetch(ENDPOINTS.TRANSACTIONS(userId), { headers });
       if (!txRes.ok) throw new Error("Failed to fetch transactions");
       const txData = await txRes.json();
       setTransactions(txData);
@@ -51,10 +50,14 @@ export default function WalletPage() {
   const handleRecharge = async () => {
     if (!rechargeAmount || parseInt(rechargeAmount) <= 0) return;
     try {
-      const res = await fetch("http://localhost:8080/api/wallet/recharge", {
+      // const res = await fetch("http://localhost:8080/api/wallet/recharge", {
+      const res = await fetch(ENDPOINTS.WALLET_RECHARGE, {
         method: "POST",
         headers,
-        body: JSON.stringify({ userId, rechargeAmount: parseInt(rechargeAmount) }),
+        body: JSON.stringify({
+          userId,
+          rechargeAmount: parseInt(rechargeAmount),
+        }),
       });
       if (!res.ok) throw new Error("Recharge failed");
       setRechargeAmount("");
@@ -68,7 +71,8 @@ export default function WalletPage() {
   const handleTransfer = async () => {
     if (!transferAmount || !transferToUserId) return;
     try {
-      const res = await fetch("http://localhost:8080/api/wallet/transfer", {
+      // const res = await fetch("http://localhost:8080/api/wallet/transfer", {
+      const res = await fetch(ENDPOINTS.WALLET_TRANSFER, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -94,17 +98,20 @@ export default function WalletPage() {
       <h2 className="mb-4 text-center">Wallet Dashboard</h2>
 
       {/* Balance */}
-      <div className="card shadow p-4 mb-4">
-        <h4>Current Balance: {balance} credits</h4>
+      <div className="card bg-light p-3 mb-4 border-0">
+        <h4 className="text-center">
+          Current Balance:{" "}
+          <span className="text-success fw-bold">{balance} credits</span>
+        </h4>
       </div>
 
       {/* Recharge */}
-      <div className="card shadow p-4 mb-4">
+      <div className="card p-4 shadow-sm border-0 mb-4">
         <h5>Recharge Wallet</h5>
         <div className="d-flex gap-2 mt-2">
           <input
             type="number"
-            placeholder="Amount"
+            placeholder="Enter amount"
             className="form-control"
             value={rechargeAmount}
             onChange={(e) => setRechargeAmount(e.target.value)}
@@ -148,31 +155,42 @@ export default function WalletPage() {
       </div>
 
       {/* Transaction History */}
-      <div className="card shadow p-4">
+      <div className="card p-4 shadow-sm border-0">
         <h5>Transaction History</h5>
         {transactions.length === 0 ? (
-          <p>No transactions yet.</p>
+          <p className="text-muted mt-3">No transactions yet.</p>
         ) : (
-          <table className="table mt-3">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Description</th>
-                <th>Timestamp</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((tx, idx) => (
-                <tr key={idx}>
-                  <td>{tx.type}</td>
-                  <td>{tx.amount}</td>
-                  <td>{tx.description}</td>
-                  <td>{new Date(tx.timestamp).toLocaleString()}</td>
+          <div
+            className="table-responsive mt-3"
+            style={{ maxHeight: "300px", overflowY: "auto" }} // <-- added scroll
+          >
+            <table className="table table-striped table-hover align-middle">
+              <thead
+                className="table-primary"
+                style={{ position: "sticky", top: 0, zIndex: 1 }}
+              >
+                <tr>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Description</th>
+                  <th>Timestamp</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {transactions
+                  .slice() // create a shallow copy so we don't mutate the original
+                  .reverse() // reverse the order (newest first)
+                  .map((tx, idx) => (
+                    <tr key={idx}>
+                      <td>{tx.type}</td>
+                      <td>{tx.amount}</td>
+                      <td>{tx.description}</td>
+                      <td>{new Date(tx.timestamp).toLocaleString()}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

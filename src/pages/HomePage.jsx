@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import golanceLogo from "../assets/GoLance_Logo_Transparent.png";
+import { ENDPOINTS } from "../api/endpoints";
 
 const developers = [
   {
@@ -64,7 +65,8 @@ export default function HomePage() {
       setUser(parsedUser);
 
       // Fetch wallet balance
-      fetch(`http://localhost:8080/api/wallet/balance/${parsedUser.id}`, {
+      // fetch(`http://localhost:8080/api/wallet/balance/${parsedUser.id}`, {
+        fetch(ENDPOINTS.WALLET_BALANCE(parsedUser.id), {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

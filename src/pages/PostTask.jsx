@@ -5,6 +5,7 @@ import { Card, Form, Button } from "react-bootstrap";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { ENDPOINTS } from "../api/endpoints";
 
 export default function PostTask() {
   const [task, setTask] = useState({
@@ -14,22 +15,23 @@ export default function PostTask() {
     category: "",
     deadline: null,
   });
-
+  const [file, setFile] = useState(null); // ✅ file state
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // Optional: prevent typing 0 or negative values
     if (name === "creditsOffered" && value < 1) return;
-
     setTask({ ...task, [name]: value });
   };
 
   const handleDateChange = (date) => {
     setTask({ ...task, deadline: date });
+  };
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
   };
 
   const handleSubmit = async (e) => {
@@ -46,24 +48,35 @@ export default function PostTask() {
       return;
     }
 
-    const taskData = {
-      title: task.title,
-      description: task.description,
-      category: task.category,
-      deadline: task.deadline ? task.deadline.toISOString().split("T")[0] : "",
-      status: "OPEN",
-      creditsOffered: parseInt(task.creditsOffered),
-      postedById: user.id,
-    };
+    // ✅ FormData for task + file
+    const formData = new FormData();
+    formData.append(
+      "task",
+      new Blob(
+        [
+          JSON.stringify({
+            title: task.title,
+            description: task.description,
+            category: task.category,
+            deadline: task.deadline ? task.deadline.toISOString().split("T")[0] : "",
+            status: "OPEN",
+            creditsOffered: parseInt(task.creditsOffered),
+            postedById: user.id,
+          }),
+        ],
+        { type: "application/json" }
+      )
+    );
+
+    if (file) formData.append("file", file);
 
     try {
-      const response = await fetch("http://localhost:8080/api/tasks", {
+      const response = await fetch(ENDPOINTS.TASKS, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // ❌ do not set Content-Type, browser handles it
         },
-        body: JSON.stringify(taskData),
+        body: formData,
       });
 
       if (response.ok) {
@@ -116,7 +129,8 @@ export default function PostTask() {
           <div className="col-md-9">
             <Card className="shadow-sm p-4">
               <h2 className="mb-4 text-center">📌 Post a New Task</h2>
-              <Form onSubmit={handleSubmit}>
+              <Form onSubmit={handleSubmit} encType="multipart/form-data">
+                {/* Title */}
                 <Form.Group className="mb-3" controlId="formTitle">
                   <Form.Label>Task Title</Form.Label>
                   <Form.Control
@@ -124,7 +138,7 @@ export default function PostTask() {
                     name="title"
                     value={task.title}
                     onChange={handleChange}
-                    placeholder="E.g., Design a landing page for new product launch"
+                    placeholder="E.g., Design a landing page"
                     required
                   />
                   <Form.Text className="text-muted">
@@ -132,6 +146,7 @@ export default function PostTask() {
                   </Form.Text>
                 </Form.Group>
 
+                {/* Description */}
                 <Form.Group className="mb-3" controlId="formDescription">
                   <Form.Label>Task Description</Form.Label>
                   <Form.Control
@@ -148,6 +163,7 @@ export default function PostTask() {
                   </Form.Text>
                 </Form.Group>
 
+                {/* Deadline & Credits */}
                 <div className="row mb-3">
                   <div className="col-md-6">
                     <Form.Group controlId="formDeadline">
@@ -179,21 +195,32 @@ export default function PostTask() {
                   </div>
                 </div>
 
-                <div className="row mb-3">
-                  <div className="col-md-6">
-                    <Form.Group controlId="formCategory">
-                      <Form.Label>Category</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="category"
-                        value={task.category}
-                        onChange={handleChange}
-                        placeholder="e.g. Web Development"
-                        required
-                      />
-                    </Form.Group>
-                  </div>
-                </div>
+                {/* Category */}
+                <Form.Group className="mb-3" controlId="formCategory">
+                  <Form.Label>Category</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="category"
+                    value={task.category}
+                    onChange={handleChange}
+                    placeholder="e.g. Web Development"
+                    required
+                  />
+                </Form.Group>
+
+                {/* File Upload */}
+                <Form.Group className="mb-3" controlId="formFile">
+                  <Form.Label>Attach File (Optional)</Form.Label>
+                  <Form.Control type="file" onChange={handleFileChange} />
+                  {file && (
+                    <Form.Text className="text-success">
+                      Selected file: {file.name}
+                    </Form.Text>
+                  )}
+                  <Form.Text className="text-muted">
+                    You can attach PDF, DOCX, PNG, or ZIP files.
+                  </Form.Text>
+                </Form.Group>
 
                 <div className="d-flex justify-content-end gap-2 btn">
                   <Button type="submit" variant="primary">
