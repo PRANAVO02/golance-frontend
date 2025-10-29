@@ -27,7 +27,6 @@ export const ENDPOINTS = {
 
   UPLOAD_FILE: `${BASE_URL}/files/upload`,
   TASK_DOWNLOAD: (taskId) => `${BASE_URL}/tasks/download/${taskId}`,
-
   UPLOAD_FREELANCER_FILE: (taskId) => `${BASE_URL}/tasks/upload/freelancer/${taskId}`,
 
 
