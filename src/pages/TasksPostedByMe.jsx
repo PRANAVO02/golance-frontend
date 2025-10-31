@@ -24,6 +24,9 @@ export default function TasksPostedByMe({
   const [transferAmount, setTransferAmount] = useState(0);
   const [transferToUserId, setTransferToUserId] = useState(null);
 
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [givenRating, setGivenRating] = useState(0);
+
   const token = localStorage.getItem("token");
   const userId = JSON.parse(localStorage.getItem("user"))?.id;
 
@@ -107,7 +110,10 @@ export default function TasksPostedByMe({
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
 
-      const originalFileName = task.freelancerFilePath.split("_").slice(1).join("_");
+      const originalFileName = task.freelancerFilePath
+        .split("_")
+        .slice(1)
+        .join("_");
       const safeTitle = task.title.replace(/\s+/g, "_");
       const finalFileName = `${safeTitle}_${originalFileName}`;
 
@@ -232,6 +238,7 @@ export default function TasksPostedByMe({
       if (res.ok) {
         alert("Credits sent successfully!");
         setShowCreditTransferModal(false);
+        setShowRatingModal(true); // open rating modal
       } else {
         const err = await res.json();
         alert("Transfer failed: " + (err.message || "Unknown error"));
@@ -258,6 +265,7 @@ export default function TasksPostedByMe({
               <th>File</th>
               <th>View Bids / Assigned</th>
               <th>Review Work</th>
+              <th>Rating</th>
               <th>Delete Task</th>
             </tr>
           </thead>
@@ -325,6 +333,49 @@ export default function TasksPostedByMe({
                     <span>—</span>
                   )}
                 </td>
+                <td>
+                  {task.status === "COMPLETED" ? (
+                    task.rating ? (
+                      <span>{task.rating} ⭐</span>
+                    ) : (
+                      <Form.Select
+                        size="sm"
+                        onChange={async (e) => {
+                          const newRating = parseInt(e.target.value);
+                          if (newRating > 0) {
+                            try {
+                              const res = await fetch(
+                                `${ENDPOINTS.TASKS}/${task.id}/rate`,
+                                {
+                                  method: "PUT",
+                                  headers,
+                                  body: JSON.stringify({ rating: newRating }),
+                                }
+                              );
+                              if (res.ok) {
+                                alert("Rating submitted!");
+                                fetchTasks(); // refresh list after rating
+                              } else {
+                                alert("Error submitting rating");
+                              }
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          }
+                        }}
+                      >
+                        <option value="0">Give Rating</option>
+                        {[1, 2, 3, 4, 5].map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    )
+                  ) : (
+                    <span>–</span>
+                  )}
+                </td>
 
                 {/* ---------- Delete Task ---------- */}
                 <td>
@@ -378,7 +429,9 @@ export default function TasksPostedByMe({
                   ⬇️ Download Freelancer File
                 </Button>
               ) : (
-                <span className="text-muted">No file uploaded by freelancer</span>
+                <span className="text-muted">
+                  No file uploaded by freelancer
+                </span>
               )}
             </>
           )}
@@ -509,6 +562,61 @@ export default function TasksPostedByMe({
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowBidsModal(false)}>
             Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal
+        show={showRatingModal}
+        onHide={() => setShowRatingModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Rate Freelancer</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Give a rating (1–5) for the freelancer’s work:</p>
+          <Form.Select
+            value={givenRating}
+            onChange={(e) => setGivenRating(parseInt(e.target.value))}
+          >
+            <option value="0">Select Rating</option>
+            {[1, 2, 3, 4, 5].map((r) => (
+              <option key={r} value={r}>
+                {r}
+              </option>
+            ))}
+          </Form.Select>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="success"
+            onClick={async () => {
+              if (givenRating < 1 || givenRating > 5) {
+                alert("Please select a rating between 1 and 5");
+                return;
+              }
+              try {
+                const res = await fetch(
+                  `${ENDPOINTS.USERS(transferToUserId)}/rating`,
+                  {
+                    method: "PUT",
+                    headers,
+                    body: JSON.stringify({ rating: givenRating }),
+                  }
+                );
+                if (res.ok) {
+                  alert("Rating submitted successfully!");
+                  setShowRatingModal(false);
+                } else {
+                  alert("Failed to submit rating");
+                }
+              } catch (err) {
+                console.error(err);
+                alert("Error submitting rating");
+              }
+            }}
+          >
+            Submit Rating
           </Button>
         </Modal.Footer>
       </Modal>

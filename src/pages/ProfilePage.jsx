@@ -6,13 +6,13 @@ export default function ProfilePage() {
   const { id } = useParams(); // get user ID from URL
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [balance, setBalance] = useState(null); // new state for wallet balance
+  const [balance, setBalance] = useState(null);
   const [error, setError] = useState("");
 
   const token = localStorage.getItem("token"); // JWT token
   const headers = {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
   };
 
   useEffect(() => {
@@ -25,17 +25,17 @@ export default function ProfilePage() {
 
       try {
         // Fetch user details
-        // const resUser = await fetch(`http://localhost:8080/api/users/${id}`, { headers });
         const resUser = await fetch(ENDPOINTS.USERS(id), { headers });
         if (!resUser.ok) throw new Error("Failed to fetch user details");
         const userData = await resUser.json();
         setUser(userData);
 
         // Fetch wallet balance
-        // const resBalance = await fetch(`http://localhost:8080/api/wallet/balance/${id}`, { headers });
-        const resBalance = await fetch(ENDPOINTS.WALLET_BALANCE(id), { headers });
+        const resBalance = await fetch(ENDPOINTS.WALLET_BALANCE(id), {
+          headers,
+        });
         if (!resBalance.ok) throw new Error("Failed to fetch wallet balance");
-        const balanceData = await resBalance.json(); // balance is returned as a number
+        const balanceData = await resBalance.json();
         setBalance(balanceData);
       } catch (err) {
         setError(err.message || "Something went wrong");
@@ -90,6 +90,13 @@ export default function ProfilePage() {
         </div>
         <div className="mb-3">
           <strong>Wallet Balance:</strong> {balance} credits
+        </div>
+
+        <div className="mb-3">
+          <strong>Rating:</strong>{" "}
+          {user.rating > 0
+            ? `${user.rating.toFixed(1)} ⭐ (${user.ratingCount} ratings)`
+            : "Not rated yet"}
         </div>
 
         <button className="btn btn-primary mt-3" onClick={handleBack}>

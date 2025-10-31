@@ -29,5 +29,7 @@ export const ENDPOINTS = {
   TASK_DOWNLOAD: (taskId) => `${BASE_URL}/tasks/download/${taskId}`,
   UPLOAD_FREELANCER_FILE: (taskId) => `${BASE_URL}/tasks/upload/freelancer/${taskId}`,
 
+  // USER_RATE: (userId) => `${BASE_URL}/users/${userId}/rate`,
+
 
 };
