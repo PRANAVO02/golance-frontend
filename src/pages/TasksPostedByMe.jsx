@@ -265,7 +265,7 @@ export default function TasksPostedByMe({
               <th>File</th>
               <th>View Bids / Assigned</th>
               <th>Review Work</th>
-              <th>Rating</th>
+              <th>Rating User</th>
               <th>Delete Task</th>
             </tr>
           </thead>
@@ -333,10 +333,14 @@ export default function TasksPostedByMe({
                     <span>—</span>
                   )}
                 </td>
+                {/* rating */}
                 <td>
                   {task.status === "COMPLETED" ? (
                     task.rating ? (
-                      <span>{task.rating} ⭐</span>
+                      <span>
+                        Thank you for the rating! Rating Awarded {task.rating}{" "}
+                        ⭐
+                      </span>
                     ) : (
                       <Form.Select
                         size="sm"
@@ -354,7 +358,14 @@ export default function TasksPostedByMe({
                               );
                               if (res.ok) {
                                 alert("Rating submitted!");
-                                fetchTasks(); // refresh list after rating
+                                // ✅ Update the local state instantly instead of waiting for refetch
+                                setTasks((prevTasks) =>
+                                  prevTasks.map((t) =>
+                                    t.id === task.id
+                                      ? { ...t, rating: newRating }
+                                      : t
+                                  )
+                                );
                               } else {
                                 alert("Error submitting rating");
                               }
