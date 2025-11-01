@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Modal, Form } from "react-bootstrap";
 import { ENDPOINTS } from "../api/endpoints";
+import { useNavigate } from "react-router-dom";
 
 export default function TasksPostedByMe({
   tasks,
@@ -29,6 +30,22 @@ export default function TasksPostedByMe({
 
   const token = localStorage.getItem("token");
   const userId = JSON.parse(localStorage.getItem("user"))?.id;
+
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const handleViewProfile = async (bidderId) => {
+    try {
+      const res = await fetch(`${ENDPOINTS.USERS(bidderId)}`, { headers });
+      if (!res.ok) throw new Error("Failed to fetch user details");
+      const data = await res.json();
+      setSelectedUser(data);
+      setShowProfileModal(true);
+    } catch (err) {
+      console.error(err);
+      alert("Could not load user details");
+    }
+  };
 
   // -------- Edit Task --------
   const handleEditClick = (task) => {
@@ -545,22 +562,34 @@ export default function TasksPostedByMe({
                     <td>{bid.description}</td>
                     <td>{bid.estimatedDays}</td>
                     <td>
-                      {tasks.find((t) => t.id === bid.taskId)?.status ===
-                      "ALLOCATED" ? (
-                        <span>
-                          Assigned to:{" "}
-                          {tasks.find((t) => t.id === bid.taskId)
-                            ?.assignedUserName || "—"}
-                        </span>
-                      ) : (
+                      <div className="d-flex flex-column gap-2 align-items-center">
+                        {/* View Profile button */}
                         <Button
-                          variant="success"
+                          variant="outline-primary"
                           size="sm"
-                          onClick={() => handleSelectBid(bid)}
+                          onClick={() => handleViewProfile(bid.bidderId)}
                         >
-                          Select
+                          View Profile
                         </Button>
-                      )}
+
+                        {/* Select button or Assigned text */}
+                        {tasks.find((t) => t.id === bid.taskId)?.status ===
+                        "ALLOCATED" ? (
+                          <span>
+                            Assigned to:{" "}
+                            {tasks.find((t) => t.id === bid.taskId)
+                              ?.assignedUserName || "—"}
+                          </span>
+                        ) : (
+                          <Button
+                            variant="success"
+                            size="sm"
+                            onClick={() => handleSelectBid(bid)}
+                          >
+                            Select
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -576,6 +605,61 @@ export default function TasksPostedByMe({
           </Button>
         </Modal.Footer>
       </Modal>
+      {/* ----------------- View Profile Modal ----------------- */}
+      <Modal
+        show={showProfileModal}
+        onHide={() => setShowProfileModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>User Profile</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedUser ? (
+            <>
+              <div className="mb-3">
+                <strong>Username:</strong> {selectedUser.username}
+              </div>
+              <div className="mb-3">
+                <strong>Email:</strong> {selectedUser.email}
+              </div>
+              <div className="mb-3">
+                <strong>Role:</strong> {selectedUser.role}
+              </div>
+              <div className="mb-3">
+                <strong>Department:</strong> {selectedUser.department || "N/A"}
+              </div>
+              <div className="mb-3">
+                <strong>Studying Year:</strong>{" "}
+                {selectedUser.studyingYear || "N/A"}
+              </div>
+              <div className="mb-3">
+                <strong>Skills:</strong> {selectedUser.skills || "N/A"}
+              </div>
+              <div className="mb-3">
+                <strong>Rating:</strong>{" "}
+                {selectedUser.rating > 0
+                  ? `${selectedUser.rating.toFixed(1)} ⭐ (${
+                      selectedUser.ratingCount
+                    } ratings)`
+                  : "Not rated yet"}
+              </div>
+            </>
+          ) : (
+            <p>Loading user details...</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowProfileModal(false)}
+          >
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* rating */}
       <Modal
         show={showRatingModal}
         onHide={() => setShowRatingModal(false)}
