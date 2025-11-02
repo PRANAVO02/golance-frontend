@@ -1,7 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Modal, Form } from "react-bootstrap";
+// Assuming ENDPOINTS is imported from a file in the same directory for this example
+// You should adjust this path based on your actual project structure
 import { ENDPOINTS } from "../api/endpoints";
-import { useNavigate } from "react-router-dom";
+
+// Mock ENDPOINTS for demonstration since the original file isn't provided
+// This is necessary for the preview to compile. Your original import is commented out above.
+// const ENDPOINTS = {
+//   USERS: (id) => `http://localhost:8080/api/users/${id}`,
+//   TASKS: `http://localhost:8080/api/tasks`,
+//   TASK_DOWNLOAD: (id) => `http://localhost:8080/api/tasks/download/${id}`,
+//   // UPDATED to match your endpoints.js
+//   BIDS_BY_TASK: (taskId) => `http://localhost:8080/api/bids/tasks/${taskId}`,
+//   // UPDATED to match your endpoints.js
+//   TASK_ALLOCATE: (taskId, bidId) =>
+//     `http://localhost:8080/api/bids/tasks/${taskId}/allocate/${bidId}`,
+//   WALLET_TRANSFER: `http://localhost:8080/api/wallet/transfer`,
+// };
 
 export default function TasksPostedByMe({
   tasks,
@@ -28,11 +43,44 @@ export default function TasksPostedByMe({
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [givenRating, setGivenRating] = useState(0);
 
-  const token = localStorage.getItem("token");
-  const userId = JSON.parse(localStorage.getItem("user"))?.id;
+  // Fallback for localStorage when running in an environment where it might not be available
+  const safeLocalStorageGet = (key) => {
+    try {
+      // Check if localStorage is actually available
+      if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem(key);
+      }
+    } catch (e) {
+      console.warn("localStorage is not available.");
+    }
+    return null;
+  };
+ 
+  // Helper to safely set localStorage
+  const safeLocalStorageSet = (key, value) => {
+    try {
+       if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(key, value);
+       }
+    } catch (e) {
+      console.warn("localStorage is not available.");
+    }
+  };
+
+
+  const token = safeLocalStorageGet("token");
+  const userId = JSON.parse(safeLocalStorageGet("user") || "{}")?.id;
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  // theme
+  const [theme] = useState(() => safeLocalStorageGet("theme") || "light");
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+  }, [theme]);
 
   const handleViewProfile = async (bidderId) => {
     try {
@@ -43,6 +91,7 @@ export default function TasksPostedByMe({
       setShowProfileModal(true);
     } catch (err) {
       console.error(err);
+      // Use a custom modal for alerts
       alert("Could not load user details");
     }
   };
@@ -228,8 +277,9 @@ export default function TasksPostedByMe({
 
         if (newStatus === "COMPLETED") {
           const task = tasks.find((t) => t.id === taskId);
-          setTransferAmount(task.creditsOffered);
-          setTransferToUserId(task.assignedUserId);
+          const assignedUserId = task.assignedUserId || task.assignedUser?.id;
+          setTransferAmount(task.creditsOffered || 0);
+          setTransferToUserId(assignedUserId);
           setShowCreditTransferModal(true);
         }
         fetchTasks();
@@ -265,166 +315,239 @@ export default function TasksPostedByMe({
       alert("Error transferring credits");
     }
   };
+  // ---------- Message User ----------
+  const handleMessageUser = async (userId) => {
+    const currentUser = JSON.parse(safeLocalStorageGet("user") || "{}");
+    if (!currentUser) return alert("You must be logged in to message.");
+
+    try {
+      await fetch("http://localhost:8080/api/messages/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderId: currentUser.id,
+          receiverId: userId,
+        }),
+      });
+
+      // ✅ Store chat user ID in localStorage
+      safeLocalStorageSet("chatWithUserId", userId);
+
+      // Redirect to messages page
+      // Assuming this runs in a browser context
+      if (typeof window !== "undefined") {
+        window.location.href = "/messages";
+      }
+    } catch (err) {
+      console.error("Failed to start chat:", err);
+      alert("Unable to start chat right now.");
+    }
+  };
 
   return (
     <>
       {/* ----------------- Tasks Table ----------------- */}
-      <div className="table-responsive">
-        <table className="table table-bordered table-hover text-center">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Credits</th>
-              <th>Deadline</th>
-              <th>Status</th>
-              <th>File</th>
-              <th>View Bids / Assigned</th>
-              <th>Review Work</th>
-              <th>Rating User</th>
-              <th>Delete Task</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((task) => (
-              <tr key={task.id}>
-                <td>{task.title}</td>
-                <td>{task.description}</td>
-                <td>{task.category}</td>
-                <td>{task.creditsOffered}</td>
-                <td>{task.deadline}</td>
-                <td>{task.status}</td>
-
-                {/* ---------- File Column (task poster) ---------- */}
-                <td>
-                  {task.filePath ? (
-                    <Button
-                      variant="outline-success"
-                      size="sm"
-                      onClick={() => handleDownload(task)}
-                    >
-                      ⬇️ Download
-                    </Button>
-                  ) : (
-                    <span className="text-muted">No File</span>
-                  )}
-                </td>
-
-                {/* ---------- View Bids / Assigned ---------- */}
-                <td>
-                  {task.status === "OPEN" ? (
-                    <Button
-                      variant="info"
-                      size="sm"
-                      onClick={() => handleViewBids(task.id)}
-                    >
-                      View Bids
-                    </Button>
-                  ) : task.assignedUserName ? (
-                    <span>Assigned to: {task.assignedUserName}</span>
-                  ) : (
-                    <span>—</span>
-                  )}
-                </td>
-
-                {/* ---------- Review Work Column (freelancer file) ---------- */}
-                <td>
-                  {task.status === "PENDING" ? (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => handleReviewClick(task)}
-                    >
-                      Review Work
-                    </Button>
-                  ) : task.status === "COMPLETED" && task.freelancerFilePath ? (
-                    <Button
-                      variant="success"
-                      size="sm"
-                      onClick={() => handleFreelancerDownload(task)}
-                    >
-                      ⬇️ Download File
-                    </Button>
-                  ) : (
-                    <span>—</span>
-                  )}
-                </td>
-                {/* rating */}
-                <td>
-                  {task.status === "COMPLETED" ? (
-                    task.rating ? (
-                      <span>
-                        Thank you for the rating! Rating Awarded {task.rating}{" "}
-                        ⭐
-                      </span>
-                    ) : (
-                      <Form.Select
-                        size="sm"
-                        onChange={async (e) => {
-                          const newRating = parseInt(e.target.value);
-                          if (newRating > 0) {
-                            try {
-                              const res = await fetch(
-                                `${ENDPOINTS.TASKS}/${task.id}/rate`,
-                                {
-                                  method: "PUT",
-                                  headers,
-                                  body: JSON.stringify({ rating: newRating }),
-                                }
-                              );
-                              if (res.ok) {
-                                alert("Rating submitted!");
-                                // ✅ Update the local state instantly instead of waiting for refetch
-                                setTasks((prevTasks) =>
-                                  prevTasks.map((t) =>
-                                    t.id === task.id
-                                      ? { ...t, rating: newRating }
-                                      : t
-                                  )
-                                );
-                              } else {
-                                alert("Error submitting rating");
-                              }
-                            } catch (err) {
-                              console.error(err);
-                            }
-                          }
-                        }}
-                      >
-                        <option value="0">Give Rating</option>
-                        {[1, 2, 3, 4, 5].map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </Form.Select>
-                    )
-                  ) : (
-                    <span>–</span>
-                  )}
-                </td>
-
-                {/* ---------- Delete Task ---------- */}
-                <td>
-                  {task.status === "OPEN" ? (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => handleDeleteClick(task.id)}
-                    >
-                      Delete
-                    </Button>
-                  ) : (
-                    <span className="delete_dsp">
-                      Assigned task cannot be deleted
-                    </span>
-                  )}
-                </td>
+      {/* This outer div adds a VERTICAL scrollbar when the table content
+        is taller than 70% of the viewport height (70vh).
+        
+        ADDED: width: '100%' to make this container fill the available
+        horizontal space in its parent.
+      */}
+      <div
+        style={{
+          maxHeight: "70vh",
+          overflowY: "auto",
+          border: "1px solid #dee2e6",
+          borderRadius: "0.25rem",
+          width: "100%", // <-- THIS IS THE FIX
+        }}
+      >
+        {/* This inner div is from Bootstrap. It adds a HORIZONTAL scrollbar
+          if the table content is wider than the container.
+          I've forced the content to be wider using min-width on the headers
+          to prevent squishing.
+        */}
+        <div className="table-responsive">
+          <table className="table table-bordered table-hover text-center mb-0">
+            {/* This header is set to "sticky" so it stays visible
+              when you scroll vertically.
+            */}
+            <thead
+              style={{ position: "sticky", top: 0, zIndex: 1 }}
+              className="table-light"
+            >
+              <tr>
+                <th style={{ minWidth: "150px" }}>Title</th>
+                <th style={{ minWidth: "300px" }}>Description</th>
+                <th style={{ minWidth: "120px" }}>Category</th>
+                <th style={{ minWidth: "100px" }}>Credits</th>
+                <th style={{ minWidth: "120px" }}>Deadline</th>
+                <th style={{ minWidth: "120px" }}>Status</th>
+                <th style={{ minWidth: "120px" }}>File</th>
+                <th style={{ minWidth: "200px" }}>View Bids / Assigned</th>
+                <th style={{ minWidth: "150px" }}>Review Work</th>
+                <th style={{ minWidth: "180px" }}>Rating User</th>
+                <th style={{ minWidth: "150px" }}>Delete Task</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {tasks.map((task) => (
+                <tr key={task.id}>
+                  <td>{task.title}</td>
+                  <td>{task.description}</td>
+                  <td>{task.category}</td>
+                  <td>{task.creditsOffered}</td>
+                  <td>{task.deadline}</td>
+                  <td>{task.status}</td>
+
+                  {/* ---------- File Column (task poster) ---------- */}
+                  <td>
+                    {task.filePath ? (
+                      <Button
+                        variant="outline-success"
+                        size="sm"
+                        onClick={() => handleDownload(task)}
+                      >
+                        ⬇️ Download
+                      </Button>
+                    ) : (
+                      <span className="text-muted">No File</span>
+                    )}
+                  </td>
+
+                  {/* ---------- View Bids / Assigned ---------- */}
+                  <td>
+                    {task.status === "OPEN" ? (
+                      <Button
+                        variant="info"
+                        size="sm"
+                        onClick={() => handleViewBids(task.id)}
+                      >
+                        View Bids
+                      </Button>
+                    ) : task.assignedUserName ? (
+                      <div>
+                        <span>Assigned to: {task.assignedUserName}</span>
+                        <div className="mt-2">
+                          <Button
+                            variant="outline-success"
+                            size="sm"
+                            onClick={() =>
+                              handleMessageUser(
+                                task.assignedUserId || task.assignedUser?.id
+                              )
+                            }
+                          >
+                            Message
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <span>—</span>
+                    )}
+                  </td>
+
+                  {/* ---------- Review Work Column (freelancer file) ---------- */}
+                  <td>
+                    {task.status === "PENDING" ? (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleReviewClick(task)}
+                      >
+                        Review Work
+                      </Button>
+                    ) : task.status === "COMPLETED" &&
+                      task.freelancerFilePath ? (
+                      <Button
+                        variant="success"
+                        size="sm"
+                        onClick={() => handleFreelancerDownload(task)}
+                      >
+                        ⬇️ Download File
+                      </Button>
+                    ) : (
+                      <span>—</span>
+                    )}
+                  </td>
+                  {/* rating */}
+                  <td>
+                    {task.status === "COMPLETED" ? (
+                      task.rating ? (
+                        <span>
+                          Thank you for the rating! Rating Awarded {task.rating}{" "}
+                          ⭐
+                        </span>
+                      ) : (
+                        <Form.Select
+                          size="sm"
+                          onChange={async (e) => {
+                            const newRating = parseInt(e.target.value);
+                            if (newRating > 0) {
+                              try {
+                                const res = await fetch(
+                                  `${ENDPOINTS.TASKS}/${task.id}/rate`,
+                                  {
+                                    method: "PUT",
+                                    headers,
+                                    body: JSON.stringify({
+                                      rating: newRating,
+                                    }),
+                                  }
+                                );
+                                if (res.ok) {
+                                  alert("Rating submitted!");
+                                  // ✅ Update the local state instantly instead of waiting for refetch
+                                  setTasks((prevTasks) =>
+                                    prevTasks.map((t) =>
+                                      t.id === task.id
+                                        ? { ...t, rating: newRating }
+                                        : t
+                                    )
+                                  );
+                                } else {
+                                  alert("Error submitting rating");
+                                }
+                              } catch (err) {
+                                console.error(err);
+                              }
+                            }
+                          }}
+                        >
+                          <option value="0">Give Rating</option>
+                          {[1, 2, 3, 4, 5].map((r) => (
+                            <option key={r} value={r}>
+                              {r}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      )
+                    ) : (
+                      <span>–</span>
+                    )}
+                  </td>
+
+                  {/* ---------- Delete Task ---------- */}
+                  <td>
+                    {task.status === "OPEN" ? (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDeleteClick(task.id)}
+                      >
+                        Delete
+                      </Button>
+                    ) : (
+                      <span className="delete_dsp">
+                        Assigned task cannot be deleted
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* ----------------- Review Work Modal ----------------- */}
@@ -557,22 +680,41 @@ export default function TasksPostedByMe({
               <tbody>
                 {selectedTaskBids.map((bid) => (
                   <tr key={bid.id}>
-                    <td>{bid.bidderName}</td>
-                    <td>{bid.credits}</td>
-                    <td>{bid.description}</td>
-                    <td>{bid.estimatedDays}</td>
+                    {/* Bidder Name + View Profile */}
                     <td>
-                      <div className="d-flex flex-column gap-2 align-items-center">
-                        {/* View Profile button */}
+                      <div className="d-flex flex-column align-items-center">
+                        <div>{bid.bidderName}</div>
                         <Button
                           variant="outline-primary"
                           size="sm"
+                          className="mt-1"
                           onClick={() => handleViewProfile(bid.bidderId)}
                         >
                           View Profile
                         </Button>
+                      </div>
+                    </td>
 
-                        {/* Select button or Assigned text */}
+                    {/* Credits */}
+                    <td>{bid.credits}</td>
+
+                    {/* Description */}
+                    <td>{bid.description}</td>
+
+                    {/* Estimated Days */}
+                    <td>{bid.estimatedDays}</td>
+
+                    {/* Actions: Message / Select / Assigned */}
+                    <td>
+                      <div className="d-flex flex-column align-items-center gap-2">
+                        <Button
+                          variant="outline-success"
+                          size="sm"
+                          onClick={() => handleMessageUser(bid.bidderId)}
+                        >
+                          Message
+                        </Button>
+
                         {tasks.find((t) => t.id === bid.taskId)?.status ===
                         "ALLOCATED" ? (
                           <span>
@@ -718,3 +860,7 @@ export default function TasksPostedByMe({
     </>
   );
 }
+
+
+
+

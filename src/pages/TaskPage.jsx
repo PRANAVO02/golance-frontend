@@ -18,6 +18,13 @@ export default function TaskPage() {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
+  // theme
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
@@ -129,13 +136,28 @@ export default function TaskPage() {
     }
   };
 
-  // Filter tasks
+  // Filter tasks based on deadline
+  const now = new Date();
+
   const openTasks = tasks.filter(
-    (t) => t.status === "OPEN" && t.postedBy?.id !== user.id
+    (t) =>
+      t.status === "OPEN" &&
+      t.postedBy?.id !== user.id &&
+      new Date(t.deadline) > now
   );
-  const otherTasks = tasks.filter(
-    (t) => t.status !== "OPEN" && t.postedBy?.id !== user.id
-  );
+
+  const otherTasks = tasks
+    .filter(
+      (t) =>
+        t.status !== "OPEN" ||
+        (t.status === "OPEN" && new Date(t.deadline) <= now)
+    )
+    .map((t) => {
+      if (t.status === "OPEN" && new Date(t.deadline) <= now) {
+        return { ...t, status: "EXPIRED" };
+      }
+      return t;
+    });
 
   return (
     <div className="container my-5">
@@ -177,7 +199,16 @@ export default function TaskPage() {
                   <h5 className="card-title fw-semibold">{task.title}</h5>
                   <p><strong>Category:</strong> {task.category}</p>
                   <p><strong>Credits:</strong> {task.creditsOffered}</p>
-                  <p><strong>Status:</strong> {task.status}</p>
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    <span
+                      className={`${
+                        task.status === "EXPIRED" ? "text-danger" : "text-success"
+                      }`}
+                    >
+                      {task.status}
+                    </span>
+                  </p>
                   <p><strong>Deadline:</strong> {task.deadline}</p>
                   <p><strong>Posted By:</strong> {task.postedByName || "N/A"}</p>
 
@@ -189,10 +220,9 @@ export default function TaskPage() {
                     >
                       View Bids
                     </button>
-                  ) : task.status !== "OPEN" ? (
+                  ) : task.status !== "OPEN" && task.status !== "EXPIRED" ? (
                     <p className="text-success mt-2">
-                     Assigned To: {task.assignedUserName || "N/A"}
-
+                      Assigned To: {task.assignedUserName || "N/A"}
                     </p>
                   ) : null}
 

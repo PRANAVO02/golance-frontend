@@ -5,7 +5,12 @@ export default function WalletPage() {
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user?.id;
   const token = localStorage.getItem("token");
+  // theme
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,

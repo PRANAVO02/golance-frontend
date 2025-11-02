@@ -1,35 +1,43 @@
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
-// Pages
+import Header from "./components/Header";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
-import PostTask from "./pages/PostTask";
-import MyTasks from "./pages/MyTasks";
-import TaskPage from "./pages/TaskPage";
-import TaskBids from "./pages/TaskBids";
+import PostTaskPage from "./pages/PostTask";
+import MyTasksPage from "./pages/MyTasks";
+import TasksPage from "./pages/TaskPage";
+import TaskBidsPage from "./pages/TaskBids";
 import ProfilePage from "./pages/ProfilePage";
 import WalletPage from "./pages/WalletPage";
-
-import "./App.css"; // make sure App.css is imported
+import MessagePage from "./pages/MessagePage";
 
 function App() {
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setUser(null);
+  };
+
   return (
     <Router>
-      {/* Main Container with vibe-y background */}
-      <div className="main-container">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/post-task" element={<PostTask />} />
-          <Route path="/my-tasks" element={<MyTasks />} />
-          <Route path="/tasks" element={<TaskPage />} />
-          <Route path="/tasks/:taskId/bids" element={<TaskBids />} />
-          <Route path="/profile/:id" element={<ProfilePage />} />
-          <Route path="/wallet" element={<WalletPage />} />
-        </Routes>
-      </div>
+      <Header user={user} onLogout={handleLogout} />
+      <Routes>
+        <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/post-task" element={<PostTaskPage />} />
+        <Route path="/my-tasks" element={<MyTasksPage />} />
+        <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/tasks/:taskId/bids" element={<TaskBidsPage />} />
+        <Route path="/profile/:id" element={<ProfilePage />} />
+        <Route path="/wallet" element={<WalletPage />} />
+        <Route path="/messages" element={<MessagePage user={user} />} />
+      </Routes>
     </Router>
   );
 }

@@ -17,7 +17,12 @@ export default function TaskBids() {
     "Content-Type": "application/json",
     "Authorization": `Bearer ${token}`,
   };
+  // theme
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
   // Fetch task and bids
   useEffect(() => {
     const fetchData = async () => {

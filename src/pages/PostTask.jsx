@@ -1,5 +1,5 @@
 // src/pages/PostTask.jsx
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Form, Button } from "react-bootstrap";
 import DatePicker from "react-datepicker";
@@ -20,11 +20,19 @@ export default function PostTask() {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "creditsOffered" && value < 1) return;
     setTask({ ...task, [name]: value });
   };
+
+
 
   const handleDateChange = (date) => {
     setTask({ ...task, deadline: date });

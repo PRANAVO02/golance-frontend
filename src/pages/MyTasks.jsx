@@ -17,7 +17,12 @@ export default function MyTasks() {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
+  // theme
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
   // ---------- Fetch Functions ----------
   const fetchTasks = async () => {
     if (!user || !token) return;

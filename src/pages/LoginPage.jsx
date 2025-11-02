@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../api/endpoints"; // ✅ Import endpoints
@@ -8,7 +8,11 @@ export default function LoginPage() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 

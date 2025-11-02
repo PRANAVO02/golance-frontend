@@ -129,7 +129,8 @@ export default function HomePage() {
   return (
     <div>
       {/* Navbar */}
-      <header>
+    
+      {/* <header>
         <nav className="navbar navbar-expand-lg bg-body-tertiary px-3">
           <div className="container-fluid">
             <Link to="/" className="navbar-brand d-flex align-items-center">
@@ -178,9 +179,7 @@ export default function HomePage() {
                 </li>
               </ul>
 
-              {/* Right section */}
               <div className="d-flex align-items-center gap-3">
-                {/* Theme toggle */}
                 <button
                   className="btn btn-outline-secondary"
                   onClick={toggleTheme}
@@ -188,19 +187,18 @@ export default function HomePage() {
                   {theme === "dark" ? "🌞 Light Mode" : "🌙 Dark Mode"}
                 </button>
 
-                {/* Wallet button */}
+               
                 {user && (
                   <button
                     className="btn btn-outline-warning d-flex align-items-center gap-1"
                     onClick={() => navigate("/wallet")}
                     title="Wallet"
                   >
-                    <span>💰</span> {/* Wallet icon */}
+                    <span>💰</span> 
                     <span>Wallet</span>
                   </button>
                 )}
 
-                {/* Profile dropdown */}
                 {user ? (
                   <div className="position-relative" ref={profileRef}>
                     <button
@@ -257,7 +255,7 @@ export default function HomePage() {
             </div>
           </div>
         </nav>
-      </header>
+      </header> */}
 
       {/* Info Section */}
       <div className="row mt-5 g-4 px-3">

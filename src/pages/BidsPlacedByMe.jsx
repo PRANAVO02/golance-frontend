@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Button, Modal, Form } from "react-bootstrap";
 import { ENDPOINTS } from "../api/endpoints";
 
 export default function BidsPlacedByMe({ bids, setBids, headers, fetchBids }) {
   const [deleteBidId, setDeleteBidId] = useState(null);
   const [showDeleteBidModal, setShowDeleteBidModal] = useState(false);
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
   // ---------- Delete Bid ----------
   const handleDeleteBidClick = (bidId) => {
     setDeleteBidId(bidId);

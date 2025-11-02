@@ -14,6 +14,12 @@ export default function ProfilePage() {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
+    // theme
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const fetchData = async () => {

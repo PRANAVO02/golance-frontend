@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../api/endpoints"; // ✅ imported
@@ -16,7 +16,12 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
+  // theme
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
   const vitEmailRegex = /^[a-z]+(?:\.[a-z]+)?\d{4}@vitstudent\.ac\.in$/;
 
   const handleChange = (e) => {

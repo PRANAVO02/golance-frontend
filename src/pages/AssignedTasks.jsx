@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Button, Modal, Form } from "react-bootstrap";
 import { ENDPOINTS } from "../api/endpoints";
 
@@ -13,7 +13,11 @@ export default function AssignedTasks({
   const [uploadFiles, setUploadFiles] = useState({}); // 🔹 track files separately
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
   // ---------- Start Task ----------
   const handleStartTask = async (taskId) => {
     try {

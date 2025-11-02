@@ -5,6 +5,7 @@
   --primary-btn-bg: #9b5de5; /* Purple gradient-ish */
   --primary-btn-text: #ffffff;
   --text-color: #3a2d4f; /* Deep purple-gray */
+  --placeholder-color:#9996a0;
   --link-color: #ff5d8f; /* Sakura pink */
   --link-hover: #ff87ab;
   --input-bg: #ffffff;
@@ -21,6 +22,7 @@
   --primary-btn-text: #ffffff;
 
   --text-color: #e5e7eb; /* Light gray text */
+ --placeholder-color:#c2b8dfa2;
 
   --link-color: #60a5fa;
   --link-hover: #ff7849;
@@ -340,6 +342,12 @@ footer a:hover {
 .accordion-body{
   color: var(--text-color) !important;
 }
+/* PostTask-specific styling */
+.posttask-container input::placeholder,
+.posttask-container textarea::placeholder {
+  color: var( --placeholder-color) !important;
+}
+
 /* Footer theme colors */
 .footer-text,
 .footer-link {
