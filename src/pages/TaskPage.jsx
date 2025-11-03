@@ -14,6 +14,7 @@ export default function TaskPage() {
   const [bidAmount, setBidAmount] = useState("");
   const [bidDescription, setBidDescription] = useState("");
   const [estimatedDays, setEstimatedDays] = useState("");
+  const [userHasBid, setUserHasBid] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
@@ -54,9 +55,15 @@ export default function TaskPage() {
       if (!res.ok) throw new Error("Failed to fetch bids");
       const data = await res.json();
       setBids(data);
+
+      // Check if current user already placed a bid
+      const hasBid = data.some((bid) => bid.userId === user.id);
+      setUserHasBid(hasBid);
+
     } catch (err) {
       console.error(err);
       setBids([]);
+      setUserHasBid(false);
     }
   };
 
@@ -70,18 +77,40 @@ export default function TaskPage() {
       fetchBids(task.id);
     } else {
       setBids([]);
+      setUserHasBid(false);
     }
     setShowBidForm(false);
   };
 
   const handleBidSubmit = async (e) => {
     e.preventDefault();
+
     if (!bidAmount || !bidDescription || !estimatedDays)
       return alert("Fill all fields");
 
-    if (Number(bidAmount) > selectedTask.creditsOffered) {
+    if (Number(bidAmount) < 0)
+      return alert("Bid amount cannot be negative");
+
+    if (Number(estimatedDays) <= 0)
+      return alert("Estimated days must be at least 1");
+
+    if (Number(bidAmount) > selectedTask.creditsOffered)
       return alert(`Bid cannot exceed ${selectedTask.creditsOffered} credits`);
-    }
+
+    const deadlineDate = new Date(selectedTask.deadline);
+    const now = new Date();
+    const daysUntilDeadline = Math.max(
+      0,
+      Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24))
+    );
+
+    if (Number(estimatedDays) > daysUntilDeadline)
+      return alert(
+        `Estimated days cannot exceed ${daysUntilDeadline} (days left till deadline)`
+      );
+
+    // Prevent double bidding even if user tries to bypass UI
+    if (userHasBid) return alert("You have already placed a bid on this task.");
 
     const payload = {
       userId: user.id,
@@ -104,6 +133,7 @@ export default function TaskPage() {
 
       const newBid = await res.json();
       setBids((prev) => [...prev, newBid]);
+      setUserHasBid(true);
       setBidAmount("");
       setBidDescription("");
       setEstimatedDays("");
@@ -136,7 +166,6 @@ export default function TaskPage() {
     }
   };
 
-  // Filter tasks based on deadline
   const now = new Date();
 
   const openTasks = tasks.filter(
@@ -158,6 +187,11 @@ export default function TaskPage() {
       }
       return t;
     });
+
+  const deadlineDateForForm = selectedTask ? new Date(selectedTask.deadline) : null;
+  const daysUntilDeadlineForForm = selectedTask
+    ? Math.max(0, Math.ceil((deadlineDateForForm - now) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   return (
     <div className="container my-5">
@@ -201,11 +235,7 @@ export default function TaskPage() {
                   <p><strong>Credits:</strong> {task.creditsOffered}</p>
                   <p>
                     <strong>Status:</strong>{" "}
-                    <span
-                      className={`${
-                        task.status === "EXPIRED" ? "text-danger" : "text-success"
-                      }`}
-                    >
+                    <span className={task.status === "EXPIRED" ? "text-danger" : "text-success"}>
                       {task.status}
                     </span>
                   </p>
@@ -214,16 +244,11 @@ export default function TaskPage() {
 
                   {/* Dynamic View: Bids or Assigned */}
                   {task.status === "OPEN" && !isOwner ? (
-                    <button
-                      className="btn btn-primary mt-2"
-                      onClick={() => handleViewDetails(task)}
-                    >
+                    <button className="btn btn-primary mt-2" onClick={() => handleViewDetails(task)}>
                       View Bids
                     </button>
                   ) : task.status !== "OPEN" && task.status !== "EXPIRED" ? (
-                    <p className="text-success mt-2">
-                      Assigned To: {task.assignedUserName || "N/A"}
-                    </p>
+                    <p className="text-success mt-2">Assigned To: {task.assignedUserName || "N/A"}</p>
                   ) : null}
 
                   {/* File download button */}
@@ -233,10 +258,7 @@ export default function TaskPage() {
                       <span className="text-truncate" style={{ maxWidth: "150px" }}>
                         {task.filePath.split("_").slice(1).join("_")}
                       </span>
-                      <button
-                        className="btn btn-outline-success btn-sm ms-auto"
-                        onClick={() => handleDownload(task)}
-                      >
+                      <button className="btn btn-outline-success btn-sm ms-auto" onClick={() => handleDownload(task)}>
                         ⬇️
                       </button>
                     </div>
@@ -250,20 +272,12 @@ export default function TaskPage() {
 
       {/* Modal for Task Details */}
       {selectedTask && selectedTask.status === "OPEN" && (
-        <div
-          className="modal show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">{selectedTask.title}</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setSelectedTask(null)}
-                ></button>
+                <button type="button" className="btn-close" onClick={() => setSelectedTask(null)}></button>
               </div>
               <div className="modal-body text-dark">
                 <p><strong>Category:</strong> {selectedTask.category}</p>
@@ -274,22 +288,20 @@ export default function TaskPage() {
                 <p><strong>Posted By:</strong> {selectedTask.postedByName || "N/A"}</p>
 
                 {selectedTask.filePath && (
-                  <button
-                    className="btn btn-outline-success btn-sm mb-2"
-                    onClick={() => handleDownload(selectedTask)}
-                  >
+                  <button className="btn btn-outline-success btn-sm mb-2" onClick={() => handleDownload(selectedTask)}>
                     ⬇️ Download File
                   </button>
                 )}
 
                 {/* Bid form */}
-                {selectedTask.postedBy?.id !== user.id && !showBidForm && (
-                  <button
-                    className="btn btn-success mb-3 mt-2"
-                    onClick={() => setShowBidForm(true)}
-                  >
+                {selectedTask.postedBy?.id !== user.id && !showBidForm && !userHasBid && (
+                  <button className="btn btn-success mb-3 mt-2" onClick={() => setShowBidForm(true)}>
                     Bid
                   </button>
+                )}
+
+                {userHasBid && (
+                  <p className="text-info mb-3">You have already placed a bid on this task.</p>
                 )}
 
                 {showBidForm && (
@@ -301,8 +313,12 @@ export default function TaskPage() {
                         className="form-control"
                         value={bidAmount}
                         onChange={(e) => setBidAmount(e.target.value)}
+                        min={0}
                         max={selectedTask.creditsOffered}
                       />
+                      <small className="text-muted">
+                        Max: {selectedTask.creditsOffered} credits
+                      </small>
                     </div>
                     <div className="mb-2">
                       <label className="form-label">Description</label>
@@ -319,18 +335,15 @@ export default function TaskPage() {
                         className="form-control"
                         value={estimatedDays}
                         onChange={(e) => setEstimatedDays(e.target.value)}
+                        min={1}
+                        max={daysUntilDeadlineForForm}
                       />
+                      <small className="text-muted">
+                        Max: {daysUntilDeadlineForForm} day(s) (till deadline)
+                      </small>
                     </div>
-                    <button type="submit" className="btn btn-primary me-2">
-                      Submit Bid
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => setShowBidForm(false)}
-                    >
-                      Cancel
-                    </button>
+                    <button type="submit" className="btn btn-primary me-2">Submit Bid</button>
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowBidForm(false)}>Cancel</button>
                   </form>
                 )}
 
@@ -355,12 +368,7 @@ export default function TaskPage() {
                 )}
               </div>
               <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setSelectedTask(null)}
-                >
-                  Close
-                </button>
+                <button className="btn btn-secondary" onClick={() => setSelectedTask(null)}>Close</button>
               </div>
             </div>
           </div>

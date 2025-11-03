@@ -138,7 +138,8 @@ export default function AssignedTasks({
             <tr>
               <th>Title</th>
               <th>Category</th>
-              <th>Credits</th>
+              <th>Offered Credits</th>
+              <th>Accepted Credits</th>
               <th>Deadline</th>
               <th>Status</th>
               <th>File</th>
@@ -152,6 +153,8 @@ export default function AssignedTasks({
                   <td>{task.title}</td>
                   <td>{task.category}</td>
                   <td>{task.creditsOffered}</td>
+                  <td>{task.allocatedCredits ?? "-"}</td>
+
                   <td>{task.deadline}</td>
                   <td>{task.status}</td>
 

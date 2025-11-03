@@ -7,15 +7,15 @@ import { ENDPOINTS } from "../api/endpoints";
 // Mock ENDPOINTS for demonstration since the original file isn't provided
 // This is necessary for the preview to compile. Your original import is commented out above.
 // const ENDPOINTS = {
-//   USERS: (id) => `http://localhost:8080/api/users/${id}`,
-//   TASKS: `http://localhost:8080/api/tasks`,
-//   TASK_DOWNLOAD: (id) => `http://localhost:8080/api/tasks/download/${id}`,
-//   // UPDATED to match your endpoints.js
-//   BIDS_BY_TASK: (taskId) => `http://localhost:8080/api/bids/tasks/${taskId}`,
-//   // UPDATED to match your endpoints.js
-//   TASK_ALLOCATE: (taskId, bidId) =>
-//     `http://localhost:8080/api/bids/tasks/${taskId}/allocate/${bidId}`,
-//   WALLET_TRANSFER: `http://localhost:8080/api/wallet/transfer`,
+//     USERS: (id) => `http://localhost:8080/api/users/${id}`,
+//     TASKS: `http://localhost:8080/api/tasks`,
+//     TASK_DOWNLOAD: (id) => `http://localhost:8080/api/tasks/download/${id}`,
+//     // UPDATED to match your endpoints.js
+//     BIDS_BY_TASK: (taskId) => `http://localhost:8080/api/bids/tasks/${taskId}`,
+//     // UPDATED to match your endpoints.js
+//     TASK_ALLOCATE: (taskId, bidId) =>
+//       `http://localhost:8080/api/bids/tasks/${taskId}/allocate/${bidId}`,
+//     WALLET_TRANSFER: `http://localhost:8080/api/wallet/transfer`,
 // };
 
 export default function TasksPostedByMe({
@@ -42,12 +42,13 @@ export default function TasksPostedByMe({
 
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [givenRating, setGivenRating] = useState(0);
+  const [ratingTaskId, setRatingTaskId] = useState(null); // ✅ FIX 1: Added state to track which task to rate
 
   // Fallback for localStorage when running in an environment where it might not be available
   const safeLocalStorageGet = (key) => {
     try {
       // Check if localStorage is actually available
-      if (typeof localStorage !== 'undefined') {
+      if (typeof localStorage !== "undefined") {
         return localStorage.getItem(key);
       }
     } catch (e) {
@@ -55,18 +56,17 @@ export default function TasksPostedByMe({
     }
     return null;
   };
- 
+
   // Helper to safely set localStorage
   const safeLocalStorageSet = (key, value) => {
     try {
-        if (typeof localStorage !== 'undefined') {
-         localStorage.setItem(key, value);
-        }
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(key, value);
+      }
     } catch (e) {
       console.warn("localStorage is not available.");
     }
   };
-
 
   const token = safeLocalStorageGet("token");
   const userId = JSON.parse(safeLocalStorageGet("user") || "{}")?.id;
@@ -281,9 +281,10 @@ export default function TasksPostedByMe({
           const assignedUserId = task.assignedUserId || task.assignedUser?.id;
 
           // ✅ FIX from last time: Use the allocated bid amount
-          setTransferAmount(task.allocatedCredits || task.creditsOffered || 0);
+          setTransferAmount(task.allocatedCredits ?? 0);
 
           setTransferToUserId(assignedUserId);
+          setRatingTaskId(taskId); // ✅ FIX 2: Store the task ID before opening the credit modal
           setShowCreditTransferModal(true);
         }
         fetchTasks();
@@ -371,6 +372,7 @@ export default function TasksPostedByMe({
                 <th style={{ minWidth: "300px" }}>Description</th>
                 <th style={{ minWidth: "120px" }}>Category</th>
                 <th style={{ minWidth: "100px" }}>Credits</th>
+                <th style={{ minWidth: "120px" }}>Accepted Credits</th>
                 <th style={{ minWidth: "120px" }}>Deadline</th>
                 <th style={{ minWidth: "120px" }}>Status</th>
                 <th style={{ minWidth: "120px" }}>File</th>
@@ -387,6 +389,13 @@ export default function TasksPostedByMe({
                   <td>{task.description}</td>
                   <td>{task.category}</td>
                   <td>{task.creditsOffered}</td>
+                  <td>
+                    {task.allocatedCredits ? (
+                      task.allocatedCredits
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
                   <td>{task.deadline}</td>
                   <td>{task.status}</td>
 
@@ -421,11 +430,16 @@ export default function TasksPostedByMe({
 
                         {/* ✅ --- NEW CODE --- ✅ */}
                         <br />
-                        <span className="text-muted" style={{ fontSize: "0.9em" }}>
-                          ({task.allocatedCredits || task.creditsOffered} Credits)
+                        <span
+                          className="text-muted"
+                          style={{ fontSize: "0.9em" }}
+                        >
+                          {task.allocatedCredits
+                            ? `(Accepted: ${task.allocatedCredits} credits)`
+                            : `(Offered: ${task.creditsOffered} credits)`}
                         </span>
                         {/* ✅ --- END NEW CODE --- ✅ */}
-                        
+
                         <div className="mt-2">
                           <Button
                             variant="outline-success"
@@ -619,6 +633,7 @@ export default function TasksPostedByMe({
             </strong>
             .
           </p>
+          {transferAmount > 0 && <p>(Based on accepted bid credits)</p>}
         </Modal.Body>
         <Modal.Footer>
           <Button
@@ -825,13 +840,16 @@ export default function TasksPostedByMe({
         <Modal.Footer>
           <Button
             variant="success"
+            // ✅ FIX 3: This logic is updated to rate BOTH the user and the task,
+            // and then update the local state so the "Thank you" message shows.
             onClick={async () => {
               if (givenRating < 1 || givenRating > 5) {
                 alert("Please select a rating between 1 and 5");
                 return;
               }
               try {
-                const res = await fetch(
+                // 1. Rate the User's profile
+                const userRatingRes = await fetch(
                   `${ENDPOINTS.USERS(transferToUserId)}/rating`,
                   {
                     method: "PUT",
@@ -839,11 +857,36 @@ export default function TasksPostedByMe({
                     body: JSON.stringify({ rating: givenRating }),
                   }
                 );
-                if (res.ok) {
+
+                // 2. Rate the Task itself
+                const taskRatingRes = await fetch(
+                  `${ENDPOINTS.TASKS}/${ratingTaskId}/rate`,
+                  {
+                    method: "PUT",
+                    headers,
+                    body: JSON.stringify({ rating: givenRating }),
+                  }
+                );
+
+                if (userRatingRes.ok && taskRatingRes.ok) {
                   alert("Rating submitted successfully!");
                   setShowRatingModal(false);
+
+                  // 3. Update local state to show "Thank you" message
+                  setTasks((prevTasks) =>
+                    prevTasks.map((t) =>
+                      t.id === ratingTaskId
+                        ? { ...t, rating: givenRating }
+                        : t
+                    )
+                  );
+
+                  // Clean up state
+                  setRatingTaskId(null);
+                  setGivenRating(0);
+                  
                 } else {
-                  alert("Failed to submit rating");
+                  alert("Failed to submit rating (one or both endpoints failed)");
                 }
               } catch (err) {
                 console.error(err);
