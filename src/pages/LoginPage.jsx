@@ -1,9 +1,9 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { ENDPOINTS } from "../api/endpoints"; // ✅ Import endpoints
+import { ENDPOINTS } from "../api/endpoints";
 
-export default function LoginPage() {
+export default function LoginPage({ onLogin }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
@@ -13,6 +13,7 @@ export default function LoginPage() {
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
+
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -22,8 +23,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // const res = await fetch("http://localhost:8080/api/auth/login", {
-         const res = await fetch(ENDPOINTS.LOGIN, {
+      const res = await fetch(ENDPOINTS.LOGIN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -37,9 +37,12 @@ export default function LoginPage() {
       const data = await res.json(); // expecting { token, user }
 
       if (data.token && data.user) {
-        // ✅ Save token and user in localStorage
+        // Save token and user in localStorage
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
+
+        // ✅ Update App state immediately
+        if (onLogin) onLogin(data.user);
 
         navigate("/"); // redirect to HomePage
       } else {

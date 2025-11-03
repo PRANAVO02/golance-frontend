@@ -18,6 +18,12 @@ const MessagePage = () => {
   const SockJS = window.SockJS;
   const Stomp = window.Stomp;
 
+     // theme
+  const [theme] = useState(() => localStorage.getItem("theme") || "light");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
   // Keep refs updated
   useEffect(() => {
     selectedContactRef.current = selectedContact;

@@ -4,9 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import golanceLogo from "../assets/GoLance_Logo_Transparent.png";
 import { ENDPOINTS } from "../api/endpoints";
 
-export default function Header() {
+export default function Header({ user, setUser }) {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
   const [walletBalance, setWalletBalance] = useState(null);
   const [theme, setTheme] = useState("dark");
   const [profileOpen, setProfileOpen] = useState(false);
@@ -23,34 +22,34 @@ export default function Header() {
     }
   };
 
-  // Fetch user + wallet + theme
+  // Fetch wallet & theme whenever user changes
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
 
-    if (!token || isTokenExpired(token)) {
+    if (!user || !token || isTokenExpired(token)) {
+      setWalletBalance(null);
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       setUser(null);
-    } else if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-
-      fetch(ENDPOINTS.WALLET_BALANCE(parsedUser.id), {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => setWalletBalance(data))
-        .catch((err) => console.error("Wallet fetch failed:", err));
+      return;
     }
 
+    // Fetch wallet balance
+    fetch(ENDPOINTS.WALLET_BALANCE(user.id), {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => setWalletBalance(data))
+      .catch((err) => console.error("Wallet fetch failed:", err));
+
+    // Set theme
     const savedTheme = localStorage.getItem("theme") || "dark";
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
-  }, []);
+  }, [user, setUser]);
 
   // Theme toggle
   const toggleTheme = () => {
@@ -91,10 +90,7 @@ export default function Header() {
               height="60"
               className="me-2"
             />
-            <span
-              className="brand-text fw-bold fs-5"
-              style={{ color: "#3399ff" }}
-            >
+            <span className="brand-text fw-bold fs-5" style={{ color: "#3399ff" }}>
               GoLance
             </span>
           </Link>
@@ -109,6 +105,7 @@ export default function Header() {
           </button>
 
           {/* Nav Links */}
+          
           <div className="collapse navbar-collapse" id="navbarContent">
             <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
               <li className="nav-item">
@@ -135,7 +132,7 @@ export default function Header() {
 
             {/* Right side buttons */}
             <div className="d-flex align-items-center gap-3">
-              {/* Message Icon with badge */}
+              {/* Message Icon */}
               <div
                 className="position-relative"
                 style={{
@@ -154,11 +151,6 @@ export default function Header() {
                 title="Messages"
               >
                 <i className="bi bi-chat-dots-fill"></i>
-                {/* Example unread badge */}
-                <span
-                  className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"
-                  style={{ fontSize: "0.6rem" }}
-                ></span>
               </div>
 
               {/* Theme toggle */}
@@ -191,9 +183,7 @@ export default function Header() {
                       className="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center"
                       style={{ width: "30px", height: "30px", fontSize: "15px" }}
                     >
-                      {user.username
-                        ? user.username.charAt(0).toUpperCase()
-                        : "U"}
+                      {user.username ? user.username.charAt(0).toUpperCase() : "U"}
                     </div>
                     <span>{user.username}</span>
                   </button>

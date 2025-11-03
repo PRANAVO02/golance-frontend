@@ -51,6 +51,11 @@ export default function HomePage() {
       return true;
     }
   };
+useEffect(() => {
+  if (location.state?.fromLogin) {
+    window.location.reload(); // Refresh the page
+  }
+}, [location.state]);
 
   // Fetch user and wallet balance
   useEffect(() => {

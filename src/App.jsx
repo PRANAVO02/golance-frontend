@@ -18,18 +18,16 @@ function App() {
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
-  const handleLogout = () => {
-    localStorage.clear();
-    setUser(null);
-  };
-
   return (
     <Router>
-      <Header user={user} onLogout={handleLogout} />
+      {/* Pass user and setUser so Header can update reactively */}
+      <Header user={user} setUser={setUser} />
+      
       <Routes>
+        {/* Pass setUser to LoginPage so login updates the app state */}
         <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<HomePage user={user} />} />
         <Route path="/post-task" element={<PostTaskPage />} />
         <Route path="/my-tasks" element={<MyTasksPage />} />
         <Route path="/tasks" element={<TasksPage />} />

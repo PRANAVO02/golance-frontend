@@ -11,6 +11,7 @@ export default function WalletPage() {
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
+  
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,

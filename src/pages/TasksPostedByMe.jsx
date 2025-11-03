@@ -59,9 +59,9 @@ export default function TasksPostedByMe({
   // Helper to safely set localStorage
   const safeLocalStorageSet = (key, value) => {
     try {
-       if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(key, value);
-       }
+        if (typeof localStorage !== 'undefined') {
+         localStorage.setItem(key, value);
+        }
     } catch (e) {
       console.warn("localStorage is not available.");
     }
@@ -241,6 +241,7 @@ export default function TasksPostedByMe({
 
       if (res.ok) {
         const updatedTask = await res.json();
+        // console.log("Updated task after allocation:", updatedTask); // <-- Add this to check the field name
         alert(`Bid allocated to ${bid.bidderName} successfully!`);
         setTasks((prevTasks) =>
           prevTasks.map((t) => (t.id === updatedTask.id ? updatedTask : t))
@@ -278,7 +279,10 @@ export default function TasksPostedByMe({
         if (newStatus === "COMPLETED") {
           const task = tasks.find((t) => t.id === taskId);
           const assignedUserId = task.assignedUserId || task.assignedUser?.id;
-          setTransferAmount(task.creditsOffered || 0);
+
+          // ✅ FIX from last time: Use the allocated bid amount
+          setTransferAmount(task.allocatedCredits || task.creditsOffered || 0);
+
           setTransferToUserId(assignedUserId);
           setShowCreditTransferModal(true);
         }
@@ -347,31 +351,17 @@ export default function TasksPostedByMe({
   return (
     <>
       {/* ----------------- Tasks Table ----------------- */}
-      {/* This outer div adds a VERTICAL scrollbar when the table content
-        is taller than 70% of the viewport height (70vh).
-        
-        ADDED: width: '100%' to make this container fill the available
-        horizontal space in its parent.
-      */}
       <div
         style={{
           maxHeight: "70vh",
           overflowY: "auto",
           border: "1px solid #dee2e6",
           borderRadius: "0.25rem",
-          width: "100%", // <-- THIS IS THE FIX
+          width: "100%",
         }}
       >
-        {/* This inner div is from Bootstrap. It adds a HORIZONTAL scrollbar
-          if the table content is wider than the container.
-          I've forced the content to be wider using min-width on the headers
-          to prevent squishing.
-        */}
         <div className="table-responsive">
           <table className="table table-bordered table-hover text-center mb-0">
-            {/* This header is set to "sticky" so it stays visible
-              when you scroll vertically.
-            */}
             <thead
               style={{ position: "sticky", top: 0, zIndex: 1 }}
               className="table-light"
@@ -428,6 +418,14 @@ export default function TasksPostedByMe({
                     ) : task.assignedUserName ? (
                       <div>
                         <span>Assigned to: {task.assignedUserName}</span>
+
+                        {/* ✅ --- NEW CODE --- ✅ */}
+                        <br />
+                        <span className="text-muted" style={{ fontSize: "0.9em" }}>
+                          ({task.allocatedCredits || task.creditsOffered} Credits)
+                        </span>
+                        {/* ✅ --- END NEW CODE --- ✅ */}
+                        
                         <div className="mt-2">
                           <Button
                             variant="outline-success"
@@ -860,7 +858,3 @@ export default function TasksPostedByMe({
     </>
   );
 }
-
-
-
-
