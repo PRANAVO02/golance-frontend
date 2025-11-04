@@ -36,8 +36,22 @@ export const ENDPOINTS = {
     CONTACTS: (userId) => `${BASE_URL}/messages/contacts/${userId}`, // Get all contacts for a user
     CONVERSATION: (userId, contactId) => `${BASE_URL}/messages/conversation/${userId}/${contactId}`, // Get messages between two users
     SEND: `${BASE_URL}/messages/send`, // Send a new message (HTTP fallback)
+     START: `${BASE_URL}/messages/start`, 
   },
 
   // 🔹 WebSocket Base (for SockJS)
   WS_BASE: "http://localhost:8080/ws", // WebSocket connection endpoint
 };
+// Mock ENDPOINTS for demonstration since the original file isn't provided
+// This is necessary for the preview to compile. Your original import is commented out above.
+// const ENDPOINTS = {
+//     USERS: (id) => `http://localhost:8080/api/users/${id}`,
+//     TASKS: `http://localhost:8080/api/tasks`,
+//     TASK_DOWNLOAD: (id) => `http://localhost:8080/api/tasks/download/${id}`,
+//     // UPDATED to match your endpoints.js
+//     BIDS_BY_TASK: (taskId) => `http://localhost:8080/api/bids/tasks/${taskId}`,
+//     // UPDATED to match your endpoints.js
+//     TASK_ALLOCATE: (taskId, bidId) =>
+//       `http://localhost:8080/api/bids/tasks/${taskId}/allocate/${bidId}`,
+//     WALLET_TRANSFER: `http://localhost:8080/api/wallet/transfer`,
+// };

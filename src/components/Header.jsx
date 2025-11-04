@@ -222,14 +222,14 @@ export default function Header({ user, setUser }) {
                 }}
                 title="Messages"
               >
-                <span className="notification-badge">Message</span>
+                {/* <span className="notification-badge">Message</span> */}
                 <i className="bi bi-chat-dots-fill"></i>
                 
               </div>
 
               {/* Theme toggle */}
               <button 
-                className="theme-toggle nav-icon" 
+                className="theme-toggle " 
                 onClick={toggleTheme}
                 aria-label="Toggle theme"
               >
@@ -237,7 +237,6 @@ export default function Header({ user, setUser }) {
                   {theme === "dark" ? "🌞" : "🌙"}
                 </span>
               </button>
-
               {/* Wallet */}
               {user && (
                 <button
