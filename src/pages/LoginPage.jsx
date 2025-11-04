@@ -8,6 +8,7 @@ export default function LoginPage({ onLogin }) {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [theme] = useState(() => localStorage.getItem("theme") || "light");
 
   useEffect(() => {
@@ -34,17 +35,15 @@ export default function LoginPage({ onLogin }) {
         throw new Error(errData.error || "Login failed");
       }
 
-      const data = await res.json(); // expecting { token, user }
+      const data = await res.json();
 
       if (data.token && data.user) {
-        // Save token and user in localStorage
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        // ✅ Update App state immediately
         if (onLogin) onLogin(data.user);
 
-        navigate("/"); // redirect to HomePage
+        navigate("/");
       } else {
         setError("Invalid username or password");
       }
@@ -55,58 +54,156 @@ export default function LoginPage({ onLogin }) {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
-    <div
-      className="d-flex justify-content-center align-items-center"
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #4d90d3ff 0%, #E7F2EF 100%)",
-        padding: "20px",
-      }}
-    >
-      <div
-        className="card shadow-lg p-5"
-        style={{ width: "450px", maxWidth: "100%", borderRadius: "12px" }}
-      >
-        <h2 className="text-center mb-4 text-primary">Login to GoLance</h2>
-        {error && <div className="alert alert-danger">{error}</div>}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <input
-              type="text"
-              name="username"
-              placeholder="Username"
-              className="form-control"
-              value={form.username}
-              onChange={handleChange}
-              required
-            />
+    <div className="main-container">
+      <div className="container-fluid">
+        <div className="row justify-content-center align-items-center min-vh-100">
+          <div className="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+            {/* Login Card */}
+            <div className="card shadow-lg border-0 login-card">
+              <div className="card-body p-4 p-md-5">
+                
+                {/* Header */}
+                <div className="text-center mb-4">
+                  <div className="login-icon mb-3">
+                    <i className="fas fa-lock fa-2x"></i>
+                  </div>
+                  <h2 className="fw-bold mb-2">Welcome Back</h2>
+                  <p className="text-muted">Sign in to your GoLance account</p>
+                </div>
+
+                {/* Error Alert */}
+                {error && (
+                  <div className="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                    <i className="fas fa-exclamation-circle me-2"></i>
+                    <div>{error}</div>
+                  </div>
+                )}
+
+                {/* Login Form */}
+                <form onSubmit={handleSubmit}>
+                  {/* Username Field */}
+                  <div className="mb-3">
+                    <label htmlFor="username" className="form-label fw-semibold">
+                      <i className="fas fa-user me-2"></i>Username
+                    </label>
+                    <input
+                      type="text"
+                      id="username"
+                      name="username"
+                      className="form-control form-control-lg"
+                      placeholder="Enter your username"
+                      value={form.username}
+                      onChange={handleChange}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+
+                  {/* Password Field */}
+                  <div className="mb-4">
+                    <label htmlFor="password" className="form-label fw-semibold">
+                      <i className="fas fa-lock me-2"></i>Password
+                    </label>
+                    <div className="input-group">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        id="password"
+                        name="password"
+                        className="form-control form-control-lg"
+                        placeholder="Enter your password"
+                        value={form.password}
+                        onChange={handleChange}
+                        required
+                        disabled={loading}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary"
+                        onClick={togglePasswordVisibility}
+                        disabled={loading}
+                      >
+                        <i className={`fas fa-eye${showPassword ? '-slash' : ''}`}></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Remember Me & Forgot Password */}
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="rememberMe"
+                      />
+                      <label className="form-check-label small" htmlFor="rememberMe">
+                        Remember me
+                      </label>
+                    </div>
+                    <Link to="/forgot-password" className="small text-decoration-none">
+                      Forgot password?
+                    </Link>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    className="btn btn-primary btn-lg w-100 py-3 fw-semibold"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Signing in...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-sign-in-alt me-2"></i>
+                        Sign In
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Divider */}
+                <div className="text-center my-4">
+                  <div className="divider d-flex align-items-center">
+                    <div className="flex-grow-1 border-top"></div>
+                    <span className="px-3 small text-muted">OR</span>
+                    <div className="flex-grow-1 border-top"></div>
+                  </div>
+                </div>
+
+                {/* Register Link */}
+                <div className="text-center">
+                  <p className="mb-0 text-muted">
+                    Don't have an account?{" "}
+                    <Link 
+                      to="/register" 
+                      className="fw-bold text-decoration-none"
+                    >
+                      Create one now
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Demo Accounts Hint */}
+            <div className="text-center mt-4">
+              <div className="card border-0 bg-transparent">
+                <small className="text-muted">
+                  <i className="fas fa-info-circle me-1"></i>
+                  Demo accounts available. Contact support for test credentials.
+                </small>
+              </div>
+            </div>
           </div>
-          <div className="mb-3">
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              className="form-control"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="btn btn-primary w-100"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-        <p className="text-center mt-3">
-          Don&apos;t have an account?{" "}
-          <Link to="/register" className="fw-bold text-decoration-none">
-            Register
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

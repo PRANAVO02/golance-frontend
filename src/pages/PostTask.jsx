@@ -1,5 +1,4 @@
-// src/pages/PostTask.jsx
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Form, Button } from "react-bootstrap";
 import DatePicker from "react-datepicker";
@@ -15,7 +14,10 @@ export default function PostTask() {
     category: "",
     deadline: null,
   });
-  const [file, setFile] = useState(null); // ✅ file state
+  const [file, setFile] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [loadingWallet, setLoadingWallet] = useState(true);
+
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
@@ -26,13 +28,33 @@ export default function PostTask() {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
+  // 🔹 Fetch user wallet balance
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      if (!user || !token) return;
+      try {
+        const res = await fetch(ENDPOINTS.WALLET_BALANCE(user.id), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error("Failed to fetch wallet balance");
+        const data = await res.json();
+        setWalletBalance(data);
+      } catch (err) {
+        console.error("Error fetching wallet balance:", err);
+      } finally {
+        setLoadingWallet(false);
+      }
+    };
+    fetchWalletBalance();
+  }, [user, token]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "creditsOffered" && value < 1) return;
     setTask({ ...task, [name]: value });
   };
-
-
 
   const handleDateChange = (date) => {
     setTask({ ...task, deadline: date });
@@ -56,7 +78,20 @@ export default function PostTask() {
       return;
     }
 
-    // ✅ FormData for task + file
+    // 🔹 Wallet balance check before posting
+    if (!loadingWallet && walletBalance !== null) {
+      if (parseInt(task.creditsOffered) > walletBalance) {
+        if (
+          window.confirm(
+            `⚠️ You only have ${walletBalance} credits, but this task requires ${task.creditsOffered}. Would you like to recharge now?`
+          )
+        ) {
+          navigate("/wallet");
+        }
+        return;
+      }
+    }
+
     const formData = new FormData();
     formData.append(
       "task",
@@ -66,7 +101,9 @@ export default function PostTask() {
             title: task.title,
             description: task.description,
             category: task.category,
-            deadline: task.deadline ? task.deadline.toISOString().split("T")[0] : "",
+            deadline: task.deadline
+              ? task.deadline.toISOString().split("T")[0]
+              : "",
             status: "OPEN",
             creditsOffered: parseInt(task.creditsOffered),
             postedById: user.id,
@@ -82,7 +119,7 @@ export default function PostTask() {
       const response = await fetch(ENDPOINTS.TASKS, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`, // ❌ do not set Content-Type, browser handles it
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
@@ -102,40 +139,55 @@ export default function PostTask() {
 
   return (
     <div className="container-fluid mt-4">
-      <div className="container-fluid posttask-container mt-4">
+      <div className="container posttask-container mt-4">
         <div className="row">
           {/* Sidebar */}
           <div className="col-md-3 mb-4">
-            <div className="sidebar p-3 shadow-sm rounded">
+            <div className="sidebar p-3 shadow-sm rounded bg-light">
               <h5 className="mb-3">Tasks</h5>
               <ul className="list-unstyled">
                 <li className="mb-2">
                   <Button variant="light" className="w-100 text-start">
-                    + Post New Task
+                    <a href="/post-task" className="text-decoration-none">
+                      Post Task
+                    </a>
                   </Button>
                 </li>
                 <li className="mb-2">
                   <Button variant="light" className="w-100 text-start">
-                    <a href="/my-tasks">My Tasks</a>
-                  </Button>
-                </li>
-                <li className="mb-2">
-                  <Button variant="light" className="w-100 text-start">
-                    Review Bids
-                  </Button>
-                </li>
-                <li>
-                  <Button variant="light" className="w-100 text-start">
-                    Completed Tasks
+                    <a href="/my-tasks" className="text-decoration-none">
+                      My Tasks
+                    </a>
                   </Button>
                 </li>
               </ul>
+
+              {/* Wallet summary */}
+              <div className="wallet-summary mt-4 p-2 rounded text-center bg-white border">
+                {loadingWallet ? (
+                  <p className="text-muted">Loading wallet...</p>
+                ) : (
+                  <>
+                    <p className="fw-bold mb-1">💳 Wallet Balance</p>
+                    <h5 className="text-success">
+                      {walletBalance !== null ? `${walletBalance} credits` : "N/A"}
+                    </h5>
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      onClick={() => navigate("/wallet")}
+                    >
+                      Recharge
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Form Card */}
           <div className="col-md-9">
-            <Card className="shadow-sm p-4">
+            <Card className="shadow-sm p-4 rounded">
               <h2 className="mb-4 text-center">📌 Post a New Task</h2>
               <Form onSubmit={handleSubmit} encType="multipart/form-data">
                 {/* Title */}
@@ -149,9 +201,6 @@ export default function PostTask() {
                     placeholder="E.g., Design a landing page"
                     required
                   />
-                  <Form.Text className="text-muted">
-                    A concise and descriptive title for your task.
-                  </Form.Text>
                 </Form.Group>
 
                 {/* Description */}
@@ -166,9 +215,6 @@ export default function PostTask() {
                     placeholder="Clearly describe what needs to be done"
                     required
                   />
-                  <Form.Text className="text-muted">
-                    Include any requirements or deliverables.
-                  </Form.Text>
                 </Form.Group>
 
                 {/* Deadline & Credits */}
@@ -206,14 +252,29 @@ export default function PostTask() {
                 {/* Category */}
                 <Form.Group className="mb-3" controlId="formCategory">
                   <Form.Label>Category</Form.Label>
-                  <Form.Control
-                    type="text"
+                  <Form.Select
                     name="category"
                     value={task.category}
                     onChange={handleChange}
-                    placeholder="e.g. Web Development"
                     required
-                  />
+                  >
+                    <option value="">-- Select a category --</option>
+                    <option value="Web Development">🌐 Web Development</option>
+                    <option value="Mobile Development">📱 Mobile Development</option>
+                    <option value="UI/UX Design">🎨 UI/UX Design</option>
+                    <option value="Graphic Design">🖌 Graphic Design</option>
+                    <option value="Content Writing">✍️ Content Writing</option>
+                    <option value="Digital Marketing">📢 Digital Marketing</option>
+                    <option value="Video Editing">🎬 Video Editing</option>
+                    <option value="Photography">📷 Photography</option>
+                    <option value="Data Analysis">📊 Data Analysis</option>
+                    <option value="Research">🔍 Research</option>
+                    <option value="Event Planning">📅 Event Planning</option>
+                    <option value="Consulting">💼 Consulting</option>
+                    <option value="Translation">🌍 Translation</option>
+                    <option value="Tutoring">📚 Tutoring</option>
+                    <option value="Other">🔹 Other</option>
+                  </Form.Select>
                 </Form.Group>
 
                 {/* File Upload */}
@@ -225,13 +286,17 @@ export default function PostTask() {
                       Selected file: {file.name}
                     </Form.Text>
                   )}
-                  <Form.Text className="text-muted">
-                    You can attach PDF, DOCX, PNG, or ZIP files.
-                  </Form.Text>
                 </Form.Group>
 
-                <div className="d-flex justify-content-end gap-2 btn">
-                  <Button type="submit" variant="primary">
+                {/* Submit Button */}
+                <div className="d-flex justify-content-end gap-2">
+                  <Button
+                    type="submit"
+                    style={{
+                      background: "linear-gradient(90deg, #9b5de5, #f15bb5)",
+                      border: "none",
+                    }}
+                  >
                     Post Task
                   </Button>
                 </div>

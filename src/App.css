@@ -1,6 +1,4 @@
-/* =======================
-   Main Container with Theme-Aware Floating Blobs
-   ======================= */
+/* Update your existing CSS */
 .main-container {
   min-height: 100vh;
   background: linear-gradient(135deg, var(--bg-color), var(--card-bg));
@@ -8,6 +6,12 @@
   position: relative;
   overflow: hidden;
   transition: background 0.5s;
+}
+
+/* Ensure content is above blobs */
+.main-container > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Top-left blob */
@@ -22,7 +26,7 @@
   left: -80px;
   animation: floatBlob1 12s ease-in-out infinite alternate;
   z-index: 0;
-  pointer-events: none; /* allow clicks on elements above */
+  pointer-events: none;
 }
 
 /* Bottom-right blob */
@@ -37,7 +41,7 @@
   right: -120px;
   animation: floatBlob2 15s ease-in-out infinite alternate;
   z-index: 0;
-  pointer-events: none; /* allow clicks on elements above */
+  pointer-events: none;
 }
 
 /* Floating animations */
