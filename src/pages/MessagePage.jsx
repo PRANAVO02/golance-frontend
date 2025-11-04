@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Form, Button, Badge, Spinner, Alert } from "react-bootstrap";
+import { ENDPOINTS } from "../api/endpoints";
 
 const MessagePage = () => {
   const [contacts, setContacts] = useState([]);
@@ -48,17 +49,19 @@ const MessagePage = () => {
   // Auto scroll to bottom when messages update
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
   // Fetch contacts
   useEffect(() => {
     if (!currentUser) return;
-    
+
     setLoading(true);
     axios
-      .get(`http://localhost:8080/api/messages/contacts/${currentUser.id}`)
+      // .get(`http://localhost:8080/api/messages/contacts/${currentUser.id}`)
+      .get(ENDPOINTS.MESSAGES.CONTACTS(currentUser.id))
       .then((res) => setContacts(res.data))
       .catch((err) => console.error("Error fetching contacts:", err))
       .finally(() => setLoading(false));
@@ -67,12 +70,11 @@ const MessagePage = () => {
   // Fetch messages for selected contact
   useEffect(() => {
     if (!selectedContact || !currentUser) return;
-    
+
     setLoading(true);
     axios
-      .get(
-        `http://localhost:8080/api/messages/conversation/${currentUser.id}/${selectedContact.id}`
-      )
+      // .get(`http://localhost:8080/api/messages/conversation/${currentUser.id}/${selectedContact.id}`)
+      .get(ENDPOINTS.MESSAGES.CONVERSATION(currentUser.id, selectedContact.id))
       .then((res) => setMessages(res.data))
       .then(() => {
         setContacts((prev) =>
@@ -91,7 +93,8 @@ const MessagePage = () => {
 
     let client;
     const connect = () => {
-      const socket = new SockJS("http://localhost:8080/ws");
+      // const socket = new SockJS("http://localhost:8080/ws");
+      const socket = new SockJS(ENDPOINTS.WS_BASE);
       client = Stomp.over(socket);
       stompClientRef.current = client;
 
@@ -157,8 +160,9 @@ const MessagePage = () => {
     if (!selectedContact || !currentUser) return;
     const interval = setInterval(() => {
       axios
+        // .get(`http://localhost:8080/api/messages/conversation/${currentUser.id}/${selectedContact.id}`)
         .get(
-          `http://localhost:8080/api/messages/conversation/${currentUser.id}/${selectedContact.id}`
+          ENDPOINTS.MESSAGES.CONVERSATION(currentUser.id, selectedContact.id)
         )
         .then((res) => setMessages(res.data))
         .catch(() => {});
@@ -181,7 +185,7 @@ const MessagePage = () => {
   }, [contacts]);
 
   // Filter contacts based on search
-  const filteredContacts = contacts.filter(contact =>
+  const filteredContacts = contacts.filter((contact) =>
     contact.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -190,11 +194,14 @@ const MessagePage = () => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      return date.toLocaleDateString([], { month: "short", day: "numeric" });
     }
   };
 
@@ -219,7 +226,8 @@ const MessagePage = () => {
         );
       } else {
         // Fallback to HTTP if WebSocket is not connected
-        await axios.post("http://localhost:8080/api/messages/send", messageData);
+        // await axios.post("http://localhost:8080/api/messages/send", messageData);
+        await axios.post(ENDPOINTS.MESSAGES.SEND, messageData);
       }
 
       // Optimistically update UI
@@ -260,12 +268,20 @@ const MessagePage = () => {
                     <i className="fas fa-comments me-2 text-primary"></i>
                     Messages
                   </h4>
-                  <Badge bg={connected ? "success" : "warning"} className="d-flex align-items-center">
-                    <i className={`fas fa-circle me-1 ${connected ? "fa-beat" : ""}`} style={{ fontSize: '6px' }}></i>
+                  <Badge
+                    bg={connected ? "success" : "warning"}
+                    className="d-flex align-items-center"
+                  >
+                    <i
+                      className={`fas fa-circle me-1 ${
+                        connected ? "fa-beat" : ""
+                      }`}
+                      style={{ fontSize: "6px" }}
+                    ></i>
                     {connected ? "Online" : "Offline"}
                   </Badge>
                 </div>
-                
+
                 {/* Search Bar */}
                 <div className="position-relative">
                   <i className="fas fa-search position-absolute top-50 start-3 translate-middle-y text-muted"></i>
@@ -298,10 +314,12 @@ const MessagePage = () => {
                     <div
                       key={contact.id}
                       className={`contact-item p-3 border-bottom ${
-                        selectedContact?.id === contact.id ? "active-contact" : ""
+                        selectedContact?.id === contact.id
+                          ? "active-contact"
+                          : ""
                       }`}
                       onClick={() => setSelectedContact(contact)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: "pointer" }}
                     >
                       <div className="d-flex align-items-center">
                         <div className="contact-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
@@ -309,13 +327,19 @@ const MessagePage = () => {
                         </div>
                         <div className="flex-grow-1">
                           <div className="d-flex justify-content-between align-items-start">
-                            <h6 className="mb-1 fw-semibold">{contact.username}</h6>
+                            <h6 className="mb-1 fw-semibold">
+                              {contact.username}
+                            </h6>
                             {contact.unread && (
-                              <Badge bg="danger" pill>●</Badge>
+                              <Badge bg="danger" pill>
+                                ●
+                              </Badge>
                             )}
                           </div>
                           <p className="mb-0 text-muted small text-truncate">
-                            {contact.lastMessage || contact.department || "No messages yet"}
+                            {contact.lastMessage ||
+                              contact.department ||
+                              "No messages yet"}
                           </p>
                         </div>
                       </div>
@@ -334,10 +358,13 @@ const MessagePage = () => {
                 <div className="chat-header p-3 border-bottom d-flex align-items-center">
                   <div className="d-flex align-items-center flex-grow-1">
                     <div className="contact-avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3">
-                      {selectedContact.username?.charAt(0)?.toUpperCase() || "U"}
+                      {selectedContact.username?.charAt(0)?.toUpperCase() ||
+                        "U"}
                     </div>
                     <div>
-                      <h5 className="mb-0 fw-bold">{selectedContact.username}</h5>
+                      <h5 className="mb-0 fw-bold">
+                        {selectedContact.username}
+                      </h5>
                       <small className="text-muted">
                         {connected ? "Online" : "Last seen recently"}
                       </small>
@@ -347,17 +374,25 @@ const MessagePage = () => {
                     <Button variant="outline-secondary" size="sm">
                       <i className="fas fa-phone"></i>
                     </Button>
-                    <Button variant="outline-secondary" size="sm" className="ms-2">
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      className="ms-2"
+                    >
                       <i className="fas fa-video"></i>
                     </Button>
-                    <Button variant="outline-secondary" size="sm" className="ms-2">
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      className="ms-2"
+                    >
                       <i className="fas fa-ellipsis-v"></i>
                     </Button>
                   </div>
                 </div>
 
                 {/* Messages Area */}
-                <div 
+                <div
                   ref={messagesContainerRef}
                   className="messages-container flex-grow-1 p-3 overflow-auto"
                 >
@@ -370,7 +405,9 @@ const MessagePage = () => {
                     <div className="text-center py-5">
                       <i className="fas fa-comment-dots fa-3x text-muted mb-3"></i>
                       <h5 className="text-muted">No messages yet</h5>
-                      <p className="text-muted">Start the conversation by sending a message!</p>
+                      <p className="text-muted">
+                        Start the conversation by sending a message!
+                      </p>
                     </div>
                   ) : (
                     messages.map((msg) => (
@@ -466,53 +503,53 @@ const MessagePage = () => {
           height: 100vh;
           background: linear-gradient(135deg, var(--bg-color), var(--card-bg));
         }
-        
+
         .contact-item {
           transition: all 0.2s ease;
           border-left: 3px solid transparent;
         }
-        
+
         .contact-item:hover {
           background-color: var(--bg-color);
         }
-        
+
         .active-contact {
           background-color: var(--primary-btn-bg) !important;
           color: white;
           border-left-color: var(--link-color);
         }
-        
+
         .active-contact .text-muted {
           color: rgba(255, 255, 255, 0.8) !important;
         }
-        
+
         .contact-avatar {
           width: 45px;
           height: 45px;
           font-size: 18px;
           font-weight: 600;
         }
-        
+
         .messages-container {
           background-color: var(--bg-color);
         }
-        
+
         .message-bubble {
           max-width: 70%;
           animation: messageSlide 0.3s ease-out;
         }
-        
+
         .message-sent {
           margin-left: auto;
         }
-        
+
         .message-sent .message-content {
           background: var(--primary-btn-bg);
           color: white;
           border-radius: 18px 18px 4px 18px;
           padding: 12px 16px;
         }
-        
+
         .message-received .message-content {
           background: var(--card-bg);
           color: var(--text-color);
@@ -520,23 +557,23 @@ const MessagePage = () => {
           border-radius: 18px 18px 18px 4px;
           padding: 12px 16px;
         }
-        
+
         .message-time {
           font-size: 0.75rem;
           opacity: 0.7;
           margin-top: 4px;
         }
-        
+
         .message-sent .message-time {
           text-align: right;
         }
-        
+
         .message-input-field {
           border-radius: 25px;
           padding: 12px 120px 12px 20px;
           border: 1px solid var(--input-border);
         }
-        
+
         .send-button {
           border-radius: 50%;
           width: 50px;
@@ -545,15 +582,15 @@ const MessagePage = () => {
           align-items: center;
           justify-content: center;
         }
-        
+
         .empty-chat-icon {
           opacity: 0.5;
         }
-        
+
         .feature-list {
           max-width: 250px;
         }
-        
+
         @keyframes messageSlide {
           from {
             opacity: 0;
@@ -564,11 +601,11 @@ const MessagePage = () => {
             transform: translateY(0);
           }
         }
-        
+
         .chat-header {
           background: var(--card-bg);
         }
-        
+
         .contact-item:last-child {
           border-bottom: none !important;
         }
