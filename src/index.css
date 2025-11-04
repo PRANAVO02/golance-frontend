@@ -700,3 +700,11 @@ footer a:hover {
   background-color: var(--card-bg) !important;
   box-shadow: var(--shadow-hover) !important;
 }
+.modal {
+  z-index: 1050 !important;
+}
+.modal-backdrop {
+  z-index: 1040 !important;
+}
+
+

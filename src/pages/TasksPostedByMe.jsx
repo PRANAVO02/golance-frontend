@@ -563,11 +563,17 @@ export default function TasksPostedByMe({
       </div>
 
       {/* ----------------- Review Work Modal ----------------- */}
-      <Modal
-        show={showReviewModal}
-        onHide={() => setShowReviewModal(false)}
-        centered
-      >
+    <Modal
+  show={showReviewModal}
+  onHide={() => setShowReviewModal(false)}
+  centered
+  backdrop="static"
+  keyboard={false}
+  style={{ zIndex: 1050 }}
+>
+
+
+
         <Modal.Header closeButton>
           <Modal.Title>Review Work</Modal.Title>
         </Modal.Header>
@@ -616,11 +622,15 @@ export default function TasksPostedByMe({
       </Modal>
 
       {/* ----------------- Credit Transfer Modal ----------------- */}
-      <Modal
-        show={showCreditTransferModal}
-        onHide={() => setShowCreditTransferModal(false)}
-        centered
-      >
+     <Modal
+  show={showCreditTransferModal}
+  onHide={() => setShowCreditTransferModal(false)}
+  centered
+  backdrop="static"
+  keyboard={false}
+  style={{ zIndex: 1052 }}
+>
+
         <Modal.Header closeButton>
           <Modal.Title>Transfer Credits</Modal.Title>
         </Modal.Header>
@@ -649,11 +659,15 @@ export default function TasksPostedByMe({
       </Modal>
 
       {/* ----------------- Delete Task Modal ----------------- */}
-      <Modal
-        show={showDeleteModal}
-        onHide={() => setShowDeleteModal(false)}
-        centered
-      >
+     <Modal
+  show={showDeleteModal}
+  onHide={() => setShowDeleteModal(false)}
+  centered
+  backdrop="static"
+  keyboard={false}
+  style={{ zIndex: 1054 }}
+>
+
         <Modal.Header closeButton>
           <Modal.Title>Confirm Delete</Modal.Title>
         </Modal.Header>
@@ -670,11 +684,15 @@ export default function TasksPostedByMe({
 
       {/* ----------------- Bids Modal ----------------- */}
       <Modal
-        show={showBidsModal}
-        onHide={() => setShowBidsModal(false)}
-        size="lg"
-        centered
-      >
+  show={showBidsModal}
+  onHide={() => setShowBidsModal(false)}
+  size="lg"
+  centered
+  backdrop="static"
+  keyboard={false}
+  style={{ zIndex: 1050 }}
+>
+
         <Modal.Header closeButton>
           <Modal.Title>Bids for Task</Modal.Title>
         </Modal.Header>
@@ -761,11 +779,15 @@ export default function TasksPostedByMe({
         </Modal.Footer>
       </Modal>
       {/* ----------------- View Profile Modal ----------------- */}
-      <Modal
-        show={showProfileModal}
-        onHide={() => setShowProfileModal(false)}
-        centered
-      >
+     <Modal
+  show={showProfileModal}
+  onHide={() => setShowProfileModal(false)}
+  centered
+  backdrop="static"
+  keyboard={false}
+  style={{ zIndex: 1060 }}
+>
+
         <Modal.Header closeButton>
           <Modal.Title>User Profile</Modal.Title>
         </Modal.Header>
@@ -815,11 +837,15 @@ export default function TasksPostedByMe({
       </Modal>
 
       {/* rating */}
-      <Modal
-        show={showRatingModal}
-        onHide={() => setShowRatingModal(false)}
-        centered
-      >
+     <Modal
+  show={showRatingModal}
+  onHide={() => setShowRatingModal(false)}
+  centered
+  backdrop="static"
+  keyboard={false}
+  style={{ zIndex: 1062 }}
+>
+
         <Modal.Header closeButton>
           <Modal.Title>Rate Freelancer</Modal.Title>
         </Modal.Header>
