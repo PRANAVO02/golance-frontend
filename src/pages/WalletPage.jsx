@@ -5,7 +5,7 @@ export default function WalletPage() {
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user?.id;
   const token = localStorage.getItem("token");
-  
+
   const [theme] = useState(() => localStorage.getItem("theme") || "light");
   const [balance, setBalance] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -19,7 +19,7 @@ export default function WalletPage() {
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
-  
+
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
@@ -111,47 +111,71 @@ export default function WalletPage() {
   const getTransactionIcon = (type, description) => {
     const typeLower = type?.toLowerCase();
     const descLower = description?.toLowerCase();
-    
+
     // Check description first for more accurate detection
-    if (descLower?.includes('transfer to') || descLower?.includes('sent to')) {
-      return '📤'; // Sent out
-    } else if (descLower?.includes('transfer from') || descLower?.includes('received from')) {
-      return '📥'; // Received
-    } else if (typeLower?.includes('recharge') || descLower?.includes('recharge')) {
-      return '💰'; // Recharge
-    } else if (typeLower?.includes('task') || descLower?.includes('task')) {
-      return '💼'; // Task related
+    if (descLower?.includes("transfer to") || descLower?.includes("sent to")) {
+      return "📤"; // Sent out
+    } else if (
+      descLower?.includes("transfer from") ||
+      descLower?.includes("received from")
+    ) {
+      return "📥"; // Received
+    } else if (
+      typeLower?.includes("recharge") ||
+      descLower?.includes("recharge")
+    ) {
+      return "💰"; // Recharge
+    } else if (typeLower?.includes("task") || descLower?.includes("task")) {
+      return "💼"; // Task related
     } else {
-      return '💳'; // Default
+      return "💳"; // Default
     }
   };
 
   const getTransactionColor = (type, description) => {
     const typeLower = type?.toLowerCase();
     const descLower = description?.toLowerCase();
-    
+
     // Outgoing transactions (negative)
-    if (descLower?.includes('transfer to') || descLower?.includes('sent to') || typeLower?.includes('sent')) {
-      return 'var(--danger-color, #dc3545)';
-    } 
+    if (
+      descLower?.includes("transfer to") ||
+      descLower?.includes("sent to") ||
+      typeLower?.includes("sent")
+    ) {
+      return "var(--danger-color, #dc3545)";
+    }
     // Incoming transactions (positive)
-    else if (descLower?.includes('transfer from') || descLower?.includes('received from') || typeLower?.includes('received') || typeLower?.includes('recharge')) {
-      return 'var(--success-color, #28a745)';
+    else if (
+      descLower?.includes("transfer from") ||
+      descLower?.includes("received from") ||
+      typeLower?.includes("received") ||
+      typeLower?.includes("recharge")
+    ) {
+      return "var(--success-color, #28a745)";
     } else {
-      return 'var(--text-color)';
+      return "var(--text-color)";
     }
   };
 
   const getAmountDisplay = (type, amount, description) => {
     const typeLower = type?.toLowerCase();
     const descLower = description?.toLowerCase();
-    
+
     // Outgoing transactions (negative)
-    if (descLower?.includes('transfer to') || descLower?.includes('sent to') || typeLower?.includes('sent')) {
+    if (
+      descLower?.includes("transfer to") ||
+      descLower?.includes("sent to") ||
+      typeLower?.includes("sent")
+    ) {
       return `-${amount}`;
-    } 
+    }
     // Incoming transactions (positive)
-    else if (descLower?.includes('transfer from') || descLower?.includes('received from') || typeLower?.includes('received') || typeLower?.includes('recharge')) {
+    else if (
+      descLower?.includes("transfer from") ||
+      descLower?.includes("received from") ||
+      typeLower?.includes("received") ||
+      typeLower?.includes("recharge")
+    ) {
       return `+${amount}`;
     } else {
       // Default to positive if we can't determine
@@ -161,15 +185,15 @@ export default function WalletPage() {
 
   const getTransactionTitle = (type, description) => {
     const descLower = description?.toLowerCase();
-    
-    if (descLower?.includes('transfer to')) {
-      return 'TRANSFER SENT';
-    } else if (descLower?.includes('transfer from')) {
-      return 'TRANSFER RECEIVED';
-    } else if (descLower?.includes('recharge')) {
-      return 'RECHARGE';
+
+    if (descLower?.includes("transfer to")) {
+      return "TRANSFER SENT";
+    } else if (descLower?.includes("transfer from")) {
+      return "TRANSFER RECEIVED";
+    } else if (descLower?.includes("recharge")) {
+      return "RECHARGE";
     } else {
-      return type?.toUpperCase() || 'TRANSACTION';
+      return type?.toUpperCase() || "TRANSACTION";
     }
   };
 
@@ -179,7 +203,11 @@ export default function WalletPage() {
         <div className="content-wrapper">
           <div className="container py-5">
             <div className="text-center py-5">
-              <div className="spinner-border text-primary mb-3" style={{width: '3rem', height: '3rem'}} role="status">
+              <div
+                className="spinner-border text-primary mb-3"
+                style={{ width: "3rem", height: "3rem" }}
+                role="status"
+              >
                 <span className="visually-hidden">Loading...</span>
               </div>
               <h3>Loading wallet...</h3>
@@ -199,27 +227,46 @@ export default function WalletPage() {
               {/* Header */}
               <div className="text-center mb-5">
                 <h1 className="gradient-text mb-3">Wallet Dashboard</h1>
-                <p className="text-muted">Manage your credits and transactions</p>
+                <p className="text-muted">
+                  Manage your credits and transactions
+                </p>
               </div>
 
               {/* Balance Card */}
-              <div className="card glass p-4 mb-4 text-center" style={{background: 'var(--primary-gradient)'}}>
+              <div
+                className="card glass p-4 mb-4 text-center"
+                style={{ background: "var(--primary-gradient)" }}
+              >
                 <div className="row align-items-center">
                   <div className="col-md-8">
                     <h3 className="text-white mb-2">Current Balance</h3>
-                    <h1 className="text-white display-4 fw-bold">{balance} credits</h1>
+                    <h1 className="text-white display-4 fw-bold">
+                      {balance} credits
+                    </h1>
                   </div>
                   <div className="col-md-4">
-                    <div className="wallet-icon" style={{fontSize: '4rem', opacity: 0.8}}>💳</div>
+                    <div
+                      className="wallet-icon"
+                      style={{ fontSize: "4rem", opacity: 0.8 }}
+                    >
+                      💳
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Error Alert */}
               {error && (
-                <div className="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                <div
+                  className="alert alert-danger alert-dismissible fade show mb-4"
+                  role="alert"
+                >
                   {error}
-                  <button type="button" className="btn-close" onClick={() => setError("")}></button>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setError("")}
+                  ></button>
                 </div>
               )}
 
@@ -227,21 +274,29 @@ export default function WalletPage() {
               <div className="card glass p-4 mb-4">
                 <div className="d-flex gap-2 mb-4">
                   <button
-                    className={`btn flex-fill ${activeAction === 'recharge' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => setActiveAction('recharge')}
+                    className={`btn flex-fill ${
+                      activeAction === "recharge"
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() => setActiveAction("recharge")}
                   >
                     💰 Recharge
                   </button>
                   <button
-                    className={`btn flex-fill ${activeAction === 'transfer' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => setActiveAction('transfer')}
+                    className={`btn flex-fill ${
+                      activeAction === "transfer"
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() => setActiveAction("transfer")}
                   >
                     🔄 Transfer
                   </button>
                 </div>
 
                 {/* Recharge Form */}
-                {activeAction === 'recharge' && (
+                {activeAction === "recharge" && (
                   <div className="action-form">
                     <h5 className="mb-3">Add Credits to Wallet</h5>
                     <div className="row g-3 align-items-end">
@@ -260,8 +315,10 @@ export default function WalletPage() {
                         <button
                           className="btn btn-success w-100"
                           onClick={handleRecharge}
-                          disabled={!rechargeAmount || parseInt(rechargeAmount) <= 0}
-                          style={{height: '45px'}}
+                          disabled={
+                            !rechargeAmount || parseInt(rechargeAmount) <= 0
+                          }
+                          style={{ height: "45px" }}
                         >
                           💳 Recharge Now
                         </button>
@@ -269,21 +326,21 @@ export default function WalletPage() {
                     </div>
                     <div className="mt-3">
                       <small className="text-muted">
-                        Quick recharge amounts: 
-                        <button 
-                          className="btn btn-sm btn-outline-secondary ms-2 me-1" 
+                        Quick recharge amounts:
+                        <button
+                          className="btn btn-sm btn-outline-secondary ms-2 me-1"
                           onClick={() => setRechargeAmount("100")}
                         >
                           100
                         </button>
-                        <button 
-                          className="btn btn-sm btn-outline-secondary mx-1" 
+                        <button
+                          className="btn btn-sm btn-outline-secondary mx-1"
                           onClick={() => setRechargeAmount("500")}
                         >
                           500
                         </button>
-                        <button 
-                          className="btn btn-sm btn-outline-secondary mx-1" 
+                        <button
+                          className="btn btn-sm btn-outline-secondary mx-1"
                           onClick={() => setRechargeAmount("1000")}
                         >
                           1000
@@ -294,7 +351,7 @@ export default function WalletPage() {
                 )}
 
                 {/* Transfer Form */}
-                {activeAction === 'transfer' && (
+                {activeAction === "transfer" && (
                   <div className="action-form">
                     <h5 className="mb-3">Transfer Credits</h5>
                     <div className="row g-3">
@@ -324,8 +381,13 @@ export default function WalletPage() {
                         <button
                           className="btn btn-primary w-100"
                           onClick={handleTransfer}
-                          disabled={!transferAmount || !transferToUserId || parseInt(transferAmount) <= 0 || parseInt(transferAmount) > balance}
-                          style={{height: '45px'}}
+                          disabled={
+                            !transferAmount ||
+                            !transferToUserId ||
+                            parseInt(transferAmount) <= 0 ||
+                            parseInt(transferAmount) > balance
+                          }
+                          style={{ height: "45px" }}
                         >
                           🔄 Transfer Credits
                         </button>
@@ -334,45 +396,108 @@ export default function WalletPage() {
                     {transferAmount > 0 && (
                       <div className="mt-3 p-3 bg-light rounded">
                         <small className="text-muted">
-                          You will have <strong>{balance - parseInt(transferAmount || 0)}</strong> credits remaining after this transfer.
+                          You will have{" "}
+                          <strong>
+                            {balance - parseInt(transferAmount || 0)}
+                          </strong>{" "}
+                          credits remaining after this transfer.
                         </small>
                       </div>
                     )}
                   </div>
                 )}
               </div>
+              {/* Quick Stats */}
+              {transactions.length > 0 && (
+                <div className="row mt-4">
+                  <div className="col-md-4">
+                    <div className="card glass text-center p-3">
+                      <div className="text-success fw-bold fs-4">
+                        +
+                        {transactions
+                          .filter((tx) => {
+                            const desc = tx.description?.toLowerCase();
+                            return (
+                              desc?.includes("transfer from") ||
+                              desc?.includes("recharge")
+                            );
+                          })
+                          .reduce((sum, tx) => sum + tx.amount, 0)}
+                      </div>
+                      <small className="text-muted">Total Received</small>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="card glass text-center p-3">
+                      <div className="text-danger fw-bold fs-4">
+                        {transactions
+                          .filter((tx) => {
+                            const desc = tx.description?.toLowerCase();
+                            return desc?.includes("transfer to");
+                          })
+                          .reduce((sum, tx) => sum + tx.amount, 0)}
+                      </div>
+                      <small className="text-muted">Total Sent</small>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="card glass text-center p-3">
+                      <div className="text-primary fw-bold fs-4">
+                        {transactions.length}
+                      </div>
+                      <small className="text-muted">Total Transactions</small>
+                    </div>
+                  </div>
+                </div>
+              )}
 
+              <br></br>
               {/* Transaction History */}
               <div className="card glass p-4">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                   <h5 className="mb-0">Transaction History</h5>
-                  <span className="badge bg-primary">{transactions.length} transactions</span>
+                  <span className="badge bg-primary">
+                    {transactions.length} transactions
+                  </span>
                 </div>
 
                 {transactions.length === 0 ? (
                   <div className="text-center py-5">
-                    <div style={{fontSize: '4rem', marginBottom: '1rem'}}>💸</div>
+                    <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>
+                      💸
+                    </div>
                     <h5 className="text-muted">No transactions yet</h5>
-                    <p className="text-muted">Your transaction history will appear here</p>
+                    <p className="text-muted">
+                      Your transaction history will appear here
+                    </p>
                   </div>
                 ) : (
-                  <div className="transaction-list" style={{maxHeight: '500px', overflowY: 'auto'}}>
+                  <div
+                    className="transaction-list"
+                    style={{ maxHeight: "500px", overflowY: "auto" }}
+                  >
                     {transactions
                       .slice()
                       .reverse()
                       .map((tx, idx) => (
-                        <div key={idx} className="transaction-item card mb-3 border-0">
+                        <div
+                          key={idx}
+                          className="transaction-item card mb-3 border-0"
+                        >
                           <div className="card-body">
                             <div className="row align-items-center">
                               <div className="col-auto">
-                                <div 
+                                <div
                                   className="transaction-icon d-flex align-items-center justify-content-center rounded-circle"
                                   style={{
-                                    width: '50px',
-                                    height: '50px',
-                                    background: 'var(--card-bg)',
-                                    border: `2px solid ${getTransactionColor(tx.type, tx.description)}`,
-                                    fontSize: '1.2rem'
+                                    width: "50px",
+                                    height: "50px",
+                                    background: "var(--card-bg)",
+                                    border: `2px solid ${getTransactionColor(
+                                      tx.type,
+                                      tx.description
+                                    )}`,
+                                    fontSize: "1.2rem",
                                   }}
                                 >
                                   {getTransactionIcon(tx.type, tx.description)}
@@ -381,20 +506,43 @@ export default function WalletPage() {
                               <div className="col">
                                 <div className="d-flex justify-content-between align-items-start">
                                   <div>
-                                    <h6 className="mb-1" style={{color: 'var(--text-color)'}}>
-                                      {getTransactionTitle(tx.type, tx.description)}
+                                    <h6
+                                      className="mb-1"
+                                      style={{ color: "var(--text-color)" }}
+                                    >
+                                      {getTransactionTitle(
+                                        tx.type,
+                                        tx.description
+                                      )}
                                     </h6>
-                                    <small className="text-muted">{tx.description}</small>
+                                    <small className="text-muted">
+                                      {tx.description}
+                                    </small>
                                   </div>
                                   <div className="text-end">
-                                    <div 
+                                    <div
                                       className="fw-bold fs-5"
-                                      style={{color: getTransactionColor(tx.type, tx.description)}}
+                                      style={{
+                                        color: getTransactionColor(
+                                          tx.type,
+                                          tx.description
+                                        ),
+                                      }}
                                     >
-                                      {getAmountDisplay(tx.type, tx.amount, tx.description)}
+                                      {getAmountDisplay(
+                                        tx.type,
+                                        tx.amount,
+                                        tx.description
+                                      )}
                                     </div>
                                     <small className="text-muted">
-                                      {new Date(tx.timestamp).toLocaleDateString()} • {new Date(tx.timestamp).toLocaleTimeString()}
+                                      {new Date(
+                                        tx.timestamp
+                                      ).toLocaleDateString()}{" "}
+                                      •{" "}
+                                      {new Date(
+                                        tx.timestamp
+                                      ).toLocaleTimeString()}
                                     </small>
                                   </div>
                                 </div>
@@ -406,40 +554,6 @@ export default function WalletPage() {
                   </div>
                 )}
               </div>
-
-              {/* Quick Stats */}
-              {transactions.length > 0 && (
-                <div className="row mt-4">
-                  <div className="col-md-4">
-                    <div className="card glass text-center p-3">
-                      <div className="text-success fw-bold fs-4">
-                        +{transactions.filter(tx => {
-                          const desc = tx.description?.toLowerCase();
-                          return desc?.includes('transfer from') || desc?.includes('recharge');
-                        }).reduce((sum, tx) => sum + tx.amount, 0)}
-                      </div>
-                      <small className="text-muted">Total Received</small>
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="card glass text-center p-3">
-                      <div className="text-danger fw-bold fs-4">
-                        {transactions.filter(tx => {
-                          const desc = tx.description?.toLowerCase();
-                          return desc?.includes('transfer to');
-                        }).reduce((sum, tx) => sum + tx.amount, 0)}
-                      </div>
-                      <small className="text-muted">Total Sent</small>
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="card glass text-center p-3">
-                      <div className="text-primary fw-bold fs-4">{transactions.length}</div>
-                      <small className="text-muted">Total Transactions</small>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -450,31 +564,41 @@ export default function WalletPage() {
         .wallet-icon {
           transition: transform 0.3s ease;
         }
-        
+
         .wallet-icon:hover {
           transform: scale(1.1);
         }
-        
+
         .transaction-item {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        
+
         .transaction-item:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        
+
         .action-form {
           animation: fadeIn 0.3s ease;
         }
-        
+
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        
+
         .gradient-text {
-          background: linear-gradient(135deg, var(--primary-btn-bg), var(--link-color));
+          background: linear-gradient(
+            135deg,
+            var(--primary-btn-bg),
+            var(--link-color)
+          );
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;

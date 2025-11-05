@@ -12,6 +12,7 @@ export default function PostTask() {
     description: "",
     creditsOffered: "",
     category: "",
+    customCategory: "",
     deadline: null,
   });
   const [file, setFile] = useState(null);
@@ -53,7 +54,17 @@ export default function PostTask() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "creditsOffered" && value < 1) return;
-    setTask({ ...task, [name]: value });
+
+    if (name === "category") {
+      // Clear custom category if user switches away from "Other"
+      if (value !== "Other") {
+        setTask({ ...task, category: value, customCategory: "" });
+      } else {
+        setTask({ ...task, category: value });
+      }
+    } else {
+      setTask({ ...task, [name]: value });
+    }
   };
 
   const handleDateChange = (date) => {
@@ -78,6 +89,12 @@ export default function PostTask() {
       return;
     }
 
+    // Validate custom category if selected
+    if (task.category === "Other" && !task.customCategory.trim()) {
+      alert("⚠️ Please enter a custom category name.");
+      return;
+    }
+
     // 🔹 Wallet balance check before posting
     if (!loadingWallet && walletBalance !== null) {
       if (parseInt(task.creditsOffered) > walletBalance) {
@@ -92,6 +109,9 @@ export default function PostTask() {
       }
     }
 
+    const selectedCategory =
+      task.category === "Other" ? task.customCategory : task.category;
+
     const formData = new FormData();
     formData.append(
       "task",
@@ -100,7 +120,7 @@ export default function PostTask() {
           JSON.stringify({
             title: task.title,
             description: task.description,
-            category: task.category,
+            category: selectedCategory,
             deadline: task.deadline
               ? task.deadline.toISOString().split("T")[0]
               : "",
@@ -275,6 +295,19 @@ export default function PostTask() {
                     <option value="Tutoring">📚 Tutoring</option>
                     <option value="Other">🔹 Other</option>
                   </Form.Select>
+
+                  {task.category === "Other" && (
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter your custom category"
+                      className="mt-2"
+                      value={task.customCategory}
+                      onChange={(e) =>
+                        setTask({ ...task, customCategory: e.target.value })
+                      }
+                      required
+                    />
+                  )}
                 </Form.Group>
 
                 {/* File Upload */}
