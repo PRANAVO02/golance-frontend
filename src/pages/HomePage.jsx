@@ -316,7 +316,7 @@ useEffect(() => {
       </div>
 
       {/* Features Section */}
-      <div className="container my-5">
+      <div id="features" className="container my-5">
         <h2 className="text-center fw-bold mb-5">Features</h2>
         <div className="row g-4">
           {[
@@ -364,7 +364,7 @@ useEffect(() => {
       </div>
 
       {/* Developers Section */}
-      <div className="container my-5">
+      <div id="developers" className="container my-5">
         <h2 className="text-center fw-bold mb-4 text-primary">
           Message from the Developers
         </h2>
