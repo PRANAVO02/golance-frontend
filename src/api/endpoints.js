@@ -1,4 +1,5 @@
-const BASE_URL = "http://localhost:8080/api";
+const BASE_URL = "https://golancebackend.onrender.com/api";
+// const BASE_URL = "http://localhost:8080/api";
 
 export const ENDPOINTS = {
   // 🔹 Authentication
